@@ -72,7 +72,7 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	this.xAxis = null;
 	this.yAxis = null;
 	this.setupXScaleAndAxis();
-	this.setupYScaleAndAxis();
+	this.setupYScaleAndAxis(); 
 
 	this.yAxisGroup = this.svgTranslateGroup.append("g")
 		.attr("class", "y cvpAxis")
@@ -108,9 +108,11 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 
 	//this.updateDisplayIndices();
 	this.drawCanvas();
-
+  
 	this.zoomListener = d3.zoom()
 		.on("zoom", (function() {
+
+			this.div.attr("transform", d3.event.transform);
 			//console.log("Zoom: " + d3.event.scale + ", x=" + d3.event.translate[0] + ", y="+d3.event.translate[1]);
 			if(this.updateViewCallback) {
 				this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
@@ -553,10 +555,18 @@ CanvasDataPlot.prototype.drawDataSet = function(dataIndex) {
 
 
 CanvasDataPlot.prototype.resetZoomListenerAxes = function() {
-	// x and y are not defined. Why is this working?
-//	this.zoomListener
-//		.x(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
-//		.y(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]));
+	var transform = d3.zoomTransform(this.div);
+	console.log(transform);
+
+	if(this.xAxisZoom){
+
+	}
+	this.zoomListener.on("zoom", function(){
+		
+	});
+/* 	this.zoomListener
+		.x(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
+		.y(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1])); */
 };
 
 CanvasDataPlot.prototype.updateZoomValues = function(scale, translate) {
@@ -695,7 +705,7 @@ CanvasTimeSeriesPlot.prototype.setupXScaleAndAxis = function() {
 		.range([0, this.width])
 		.nice();
 
-	this.customTimeFormat = d3.time.format.utc.multi([
+	this.customTimeFormat = d3.timeFormat([
 		[".%L", function(d) { return d.getUTCMilliseconds(); }],
 		[":%S", function(d) { return d.getUTCSeconds(); }],
 		//["%I:%M", function(d) { return d.getUTCMinutes(); }],
@@ -706,9 +716,8 @@ CanvasTimeSeriesPlot.prototype.setupXScaleAndAxis = function() {
 		["%Y", function() { return true; }]
 	]);
 
-	this.xAxis = d3.svg.axis()
+	this.xAxis = d3.axisBottom()
 		.scale(this.xScale)
-		.orient("bottom")
 		.tickFormat(this.customTimeFormat)
 		.ticks(Math.round(this.xTicksPerPixel*this.width));
 };
