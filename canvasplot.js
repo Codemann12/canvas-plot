@@ -109,7 +109,7 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	//this.updateDisplayIndices();
 	this.drawCanvas();
 
-	this.zoomListener = d3.behavior.zoom()
+	this.zoomListener = d3.zoom()
 		.on("zoom", (function() {
 			//console.log("Zoom: " + d3.event.scale + ", x=" + d3.event.translate[0] + ", y="+d3.event.translate[1]);
 			if(this.updateViewCallback) {
@@ -329,26 +329,24 @@ CanvasDataPlot.prototype.destroy = function() {
 // private methods
 
 CanvasDataPlot.prototype.setupXScaleAndAxis = function() {
-	this.xScale = d3.scale.linear()
+	this.xScale = d3.scaleLinear()
 		.domain(this.calculateXDomain())
 		.range([0, this.width])
 		.nice();
 
-	this.xAxis = d3.svg.axis()
-		.scale(this.xScale)
-		.orient("bottom")
+	this.xAxis = d3.axisBottom()
+        .scale(this.xScale)
 		.ticks(Math.round(this.xTicksPerPixel*this.width));
 };
 
 CanvasDataPlot.prototype.setupYScaleAndAxis = function() {
-	this.yScale = d3.scale.linear()
+	this.yScale = d3.scaleLinear()
 		.domain(this.calculateYDomain())
 		.range(this.invertYAxis ? [0, this.height] : [this.height, 0])
 		.nice();
 
-	this.yAxis = d3.svg.axis()
+	this.yAxis = d3.axisLeft()
 		.scale(this.yScale)
-		.orient("left")
 		.ticks(Math.round(this.yTicksPerPixel*this.height));
 };
 
@@ -553,10 +551,12 @@ CanvasDataPlot.prototype.drawDataSet = function(dataIndex) {
 	}
 };
 
+
 CanvasDataPlot.prototype.resetZoomListenerAxes = function() {
-	this.zoomListener
-		.x(this.xAxisZoom ? this.xScale : d3.scale.linear().domain([0,1]).range([0,1]))
-		.y(this.yAxisZoom ? this.yScale : d3.scale.linear().domain([0,1]).range([0,1]));
+	// x and y are not defined. Why is this working?
+//	this.zoomListener
+//		.x(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
+//		.y(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]));
 };
 
 CanvasDataPlot.prototype.updateZoomValues = function(scale, translate) {
@@ -690,7 +690,7 @@ CanvasTimeSeriesPlot.prototype.getTooltipStringX = function(dataPoint) {
 };
 
 CanvasTimeSeriesPlot.prototype.setupXScaleAndAxis = function() {
-	this.xScale = d3.time.scale.utc()
+	this.xScale = d3.scaleTime()
 		.domain(this.calculateXDomain())
 		.range([0, this.width])
 		.nice();
