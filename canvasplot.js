@@ -108,22 +108,32 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 
 	//this.updateDisplayIndices();
 	this.drawCanvas();
-  
-	this.zoomListener = d3.zoom()
-		.on("zoom", (function() {
 
-			this.div.attr("transform", d3.event.transform);
-			//console.log("Zoom: " + d3.event.scale + ", x=" + d3.event.translate[0] + ", y="+d3.event.translate[1]);
-			if(this.updateViewCallback) {
-				this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
-			}
-			this.updateDisplayIndices();
-			this.redrawCanvasAndAxes();
-			if(this.showTooltips) {
-				this.updateTooltip();
-			}
-		}).bind(this));
+	this.zoomListener = d3.zoom()
+		.on("zoom", zoomFunction)
+		.scaleExtent([1,5])
+		.bind(this);
 	this.zoomListener(this.div);
+
+	function zoomFunction(){		 
+    	   var new_xScale = d3.event.transform.rescaleX(this.xScale);
+		   var new_yScale = d3.event.transform.rescaleX(this.yScale); 
+
+		   this.xAxisGroup.call(xAxis.scale(new_xScale));
+		   this.yAxisGroup.call(yAxis.scale(new_yScale));
+
+		   this.div.attr("transform", d3.event.transform); 
+	 	   //console.log("Zoom: " + d3.event.scale + ", x=" + d3.event.translate[0] + ", y="+d3.event.translate[1]);
+		 /*   if(this.updateViewCallback) {
+			   this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
+		   }
+		   this.updateDisplayIndices();
+		   this.redrawCanvasAndAxes();
+		   if(this.showTooltips) {
+			   this.updateTooltip();
+		   } */
+	   }
+
 
 	if(this.showTooltips) {
 		this.div.on("mousemove", (this.updateTooltip).bind(this));
@@ -555,15 +565,8 @@ CanvasDataPlot.prototype.drawDataSet = function(dataIndex) {
 
 
 CanvasDataPlot.prototype.resetZoomListenerAxes = function() {
-	var transform = d3.zoomTransform(this.div);
-	console.log(transform);
 
-	if(this.xAxisZoom){
 
-	}
-	this.zoomListener.on("zoom", function(){
-		
-	});
 /* 	this.zoomListener
 		.x(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
 		.y(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1])); */
@@ -705,7 +708,9 @@ CanvasTimeSeriesPlot.prototype.setupXScaleAndAxis = function() {
 		.range([0, this.width])
 		.nice();
 
-	this.customTimeFormat = d3.timeFormat([
+
+	
+	var customTimeFormat = d3.timeFormat([
 		[".%L", function(d) { return d.getUTCMilliseconds(); }],
 		[":%S", function(d) { return d.getUTCSeconds(); }],
 		//["%I:%M", function(d) { return d.getUTCMinutes(); }],
