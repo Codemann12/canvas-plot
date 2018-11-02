@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
+
 function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	config = config || {};
 
@@ -49,11 +51,14 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	this.totalHeight = Math.max(this.minCanvasHeight, canvasDimensions[1]);
 	this.width = this.totalWidth - this.margin.left - this.margin.right;
 	this.height = this.totalHeight - this.margin.top - this.margin.bottom;
+	
+
+
 
 	this.div = this.parent.append("div")
 		.attr("class", "cvpChart")
 		.style("width", this.totalWidth+"px")
-		.style("height", this.totalHeight+"px");
+		.style("height", this.totalHeight+"px")
 	this.d3Canvas = this.div.append("canvas")
 		.attr("class", "cvpCanvas")
 		.attr("width", this.width)
@@ -65,7 +70,8 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 		.attr("width", this.totalWidth)
 		.attr("height", this.totalHeight);
 	this.svgTranslateGroup = this.svg.append("g")
-		.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+		 .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")"); 
+				
 
 	this.xScale = null;
 	this.yScale = null;
@@ -105,34 +111,32 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	this.legend = null;
 	this.legendBG = null;
 	this.legendWidth = 0;
-
+	this.new_xScale = 0; 
+	this.new_yScale = 0;
 	//this.updateDisplayIndices();
 	this.drawCanvas();
+	
+ 	this.zoomListener = d3.zoom()
+		.on("zoom", (function(){
+			new_xScale = d3.event.transform.rescaleX(this.xScale)
+			new_yScale = d3.event.transform.rescaleY(this.yScale)
+			
+        	if(this.updateViewCallback) {
+				this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
+			}
 
-	this.zoomListener = d3.zoom()
-		.on("zoom", zoomFunction)
-		.scaleExtent([1,5])
-		.bind(this);
-	this.zoomListener(this.div);
+		    //console.log(this.xAxis.scale(new_xScale))
+			this.updateDisplayIndices();
+			this.xAxisGroup.call(this.xAxis.scale(new_xScale));
+	        this.yAxisGroup.call(this.yAxis.scale(new_yScale));
+			this.redrawCanvasAndAxes();
+			if(this.showTooltips) {
+				this.updateTooltip();
+			}
 
-	function zoomFunction(){		 
-    	   var new_xScale = d3.event.transform.rescaleX(this.xScale);
-		   var new_yScale = d3.event.transform.rescaleX(this.yScale); 
+	   	}).bind(this));
+		this.zoomListener(this.div);
 
-		   this.xAxisGroup.call(xAxis.scale(new_xScale));
-		   this.yAxisGroup.call(yAxis.scale(new_yScale));
-
-		   this.div.attr("transform", d3.event.transform); 
-	 	   //console.log("Zoom: " + d3.event.scale + ", x=" + d3.event.translate[0] + ", y="+d3.event.translate[1]);
-		 /*   if(this.updateViewCallback) {
-			   this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
-		   }
-		   this.updateDisplayIndices();
-		   this.redrawCanvasAndAxes();
-		   if(this.showTooltips) {
-			   this.updateTooltip();
-		   } */
-	   }
 
 
 	if(this.showTooltips) {
@@ -509,8 +513,8 @@ CanvasDataPlot.prototype.updateDisplayIndices = function() {
 };
 
 CanvasDataPlot.prototype.redrawCanvasAndAxes = function() {
-	this.xAxisGroup.call(this.xAxis);
-	this.yAxisGroup.call(this.yAxis);
+	/* this.xAxisGroup.call(this.xAxis);
+	this.yAxisGroup.call(this.yAxis); */
 	this.drawCanvas();
 };
 
@@ -523,6 +527,7 @@ CanvasDataPlot.prototype.drawCanvas = function() {
 	for(var i=0; i<nDataSets; ++i) {
 		this.drawDataSet(i);
 	}
+	
 };
 
 CanvasDataPlot.prototype.drawGrid = function() {
@@ -566,10 +571,9 @@ CanvasDataPlot.prototype.drawDataSet = function(dataIndex) {
 
 CanvasDataPlot.prototype.resetZoomListenerAxes = function() {
 
-
-/* 	this.zoomListener
-		.x(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
-		.y(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1])); */
+/*  	this.zoomListener
+		.transform.rescaleX(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
+		.transform.rescaleY(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]));  */
 };
 
 CanvasDataPlot.prototype.updateZoomValues = function(scale, translate) {
@@ -707,7 +711,6 @@ CanvasTimeSeriesPlot.prototype.setupXScaleAndAxis = function() {
 		.domain(this.calculateXDomain())
 		.range([0, this.width])
 		.nice();
-
 
 	
 	var customTimeFormat = d3.timeFormat([
