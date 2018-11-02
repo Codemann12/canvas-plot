@@ -51,26 +51,29 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	this.totalHeight = Math.max(this.minCanvasHeight, canvasDimensions[1]);
 	this.width = this.totalWidth - this.margin.left - this.margin.right;
 	this.height = this.totalHeight - this.margin.top - this.margin.bottom;
+
+
+	this.zoomListener = d3.zoom().
+	       on("zoom", zoomFunction.bind(this));
 	
-
-
-
 	this.div = this.parent.append("div")
 		.attr("class", "cvpChart")
 		.style("width", this.totalWidth+"px")
 		.style("height", this.totalHeight+"px")
+		.call(this.zoomListener);
 	this.d3Canvas = this.div.append("canvas")
 		.attr("class", "cvpCanvas")
 		.attr("width", this.width)
 		.attr("height", this.height)
-		.style("padding", this.margin.top + "px " + this.margin.right + "px " + this.margin.bottom + "px " + this.margin.left + "px");
+		.style("padding", this.margin.top + "px " + this.margin.right + "px " + this.margin.bottom + "px " + this.margin.left + "px")
 	this.canvas = this.d3Canvas.node().getContext("2d");
 	this.svg = this.div.append("svg")
 		.attr("class", "cvpSVG")
 		.attr("width", this.totalWidth)
-		.attr("height", this.totalHeight);
+		.attr("height", this.totalHeight)
 	this.svgTranslateGroup = this.svg.append("g")
-		 .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")"); 
+		 .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
+		
 				
 
 	this.xScale = null;
@@ -115,29 +118,24 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 	this.new_yScale = 0;
 	//this.updateDisplayIndices();
 	this.drawCanvas();
-	
- 	this.zoomListener = d3.zoom()
-		.on("zoom", (function(){
-			new_xScale = d3.event.transform.rescaleX(this.xScale)
-			new_yScale = d3.event.transform.rescaleY(this.yScale)
+
+
+	function zoomFunction(){
+		new_xScale = d3.event.transform.rescaleX(this.xScale)
+		new_yScale = d3.event.transform.rescaleY(this.yScale)
 			
-        	if(this.updateViewCallback) {
-				this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
-			}
-
-		    //console.log(this.xAxis.scale(new_xScale))
-			this.updateDisplayIndices();
-			this.xAxisGroup.call(this.xAxis.scale(new_xScale));
-	        this.yAxisGroup.call(this.yAxis.scale(new_yScale));
-			this.redrawCanvasAndAxes();
-			if(this.showTooltips) {
-				this.updateTooltip();
-			}
-
-	   	}).bind(this));
-		this.zoomListener(this.div);
-
-
+        if(this.updateViewCallback) {
+			this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
+		}
+		this.updateDisplayIndices();
+		this.xAxisGroup.call(this.xAxis.scale(new_xScale));
+	    this.yAxisGroup.call(this.yAxis.scale(new_yScale));
+		this.redrawCanvasAndAxes();
+		//this.svg.attr("transform", d3.event.transform)
+		if(this.showTooltips) {
+			this.updateTooltip();
+		}
+	}	
 
 	if(this.showTooltips) {
 		this.div.on("mousemove", (this.updateTooltip).bind(this));
@@ -570,10 +568,10 @@ CanvasDataPlot.prototype.drawDataSet = function(dataIndex) {
 
 
 CanvasDataPlot.prototype.resetZoomListenerAxes = function() {
-
-/*  	this.zoomListener
-		.transform.rescaleX(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1]))
-		.transform.rescaleY(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]));  */
+	console.log("starting the reset");
+   /*   this.svgTranslateGroup.transition()
+      	.call(this.zoomListener.transform, d3.zoomIdentity);  */
+		console.log("stop reset");
 };
 
 CanvasDataPlot.prototype.updateZoomValues = function(scale, translate) {
