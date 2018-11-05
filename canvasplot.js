@@ -65,14 +65,15 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
 		.attr("class", "cvpCanvas")
 		.attr("width", this.width)
 		.attr("height", this.height)
-		.style("padding", this.margin.top + "px " + this.margin.right + "px " + this.margin.bottom + "px " + this.margin.left + "px")
+		.style("padding", this.margin.top + "px " + this.margin.right + "px " + this.margin.bottom + "px " + this.margin.left + "px");
 	this.canvas = this.d3Canvas.node().getContext("2d");
 	this.svg = this.div.append("svg")
 		.attr("class", "cvpSVG")
 		.attr("width", this.totalWidth)
-		.attr("height", this.totalHeight)
+		.attr("height", this.totalHeight);
 	this.svgTranslateGroup = this.svg.append("g")
-		 .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
+		.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+		//.call(this.zoomListener);
 		
 				
 
@@ -127,11 +128,12 @@ function CanvasDataPlot(parentElement, canvasDimensions, config) {
         if(this.updateViewCallback) {
 			this.updateViewCallback(this, this.xScale.domain(), this.yScale.domain());
 		}
+
 		this.updateDisplayIndices();
 		this.xAxisGroup.call(this.xAxis.scale(new_xScale));
 	    this.yAxisGroup.call(this.yAxis.scale(new_yScale));
 		this.redrawCanvasAndAxes();
-		//this.svg.attr("transform", d3.event.transform)
+		this.d3Canvas.attr("transform", d3.event.transform);
 		if(this.showTooltips) {
 			this.updateTooltip();
 		}
@@ -568,10 +570,11 @@ CanvasDataPlot.prototype.drawDataSet = function(dataIndex) {
 
 
 CanvasDataPlot.prototype.resetZoomListenerAxes = function() {
-	console.log("starting the reset");
-   /*   this.svgTranslateGroup.transition()
-      	.call(this.zoomListener.transform, d3.zoomIdentity);  */
-		console.log("stop reset");
+	 /* this.zoomListener.translateTo(this.div,
+		(this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1])),
+		(this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */  
+		//this.div.call(this.zoomListener.transform, d3.zoomIdentity);
+		
 };
 
 CanvasDataPlot.prototype.updateZoomValues = function(scale, translate) {
