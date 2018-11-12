@@ -1,7 +1,7 @@
 
 import * as d3 from 'd3';
 import { namespace } from 'd3';
-d3.select('body');
+//d3.select('body');
 
 export class CanvasDataPlot{
 
