@@ -1,21 +1,11 @@
 "use strict";
 exports.__esModule = true;
-//d3.select('body');
 var CanvasDataPlot = /** @class */ (function () {
-    //let pair: [Number, Number]
-    //data:Array<pair>;
-    // Not sure if the enum Config would work like this but .
-    /* usage!
-       import{CanvasDataPlot} from './CanvasDataPlot';
-       let canva = new CanvasDataPlot();
-       canva.config = CanvasDataPlot.Config.xAxisLabel
-    */
     function CanvasDataPlot(parentElement, canvasDimensions, config) {
-        this.parentElement = parentElement;
+        this.parent = parentElement;
         this.canvasDimensions = canvasDimensions;
-        var x;
         this.config = config;
-        //	this.data = [];
+        console.log("test");
     }
     return CanvasDataPlot;
 }());
