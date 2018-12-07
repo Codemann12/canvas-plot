@@ -1,0 +1,36 @@
+{
+  "name": "canvas-plot",
+  "version": "1.0.0",
+  "description": "A JavaScript plotting library based on D3.js for visualizing large data sets.",
+  "main": "index.js",
+  "dependencies": {
+    "@types/d3": "^5.0.1",
+    "@types/jquery": "^3.3.22",
+    "d3": "^5.7.0",
+    "d3-array": "^2.0.2",
+    "d3-axis": "^1.0.12",
+    "d3-collection": "^1.0.7",
+    "d3-legend": "^1.0.0",
+    "d3-svg-legend": "^2.25.6",
+    "jquery": "^3.3.1"
+  },
+  "devDependencies": {
+    "rollup": "^0.67.4",
+    "rollup-plugin-node-resolve": "^3.5.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Codemann12/canvas-plot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Codemann12/canvas-plot/issues"
+  },
+  "homepage": "https://github.com/Codemann12/canvas-plot#readme"
+}
