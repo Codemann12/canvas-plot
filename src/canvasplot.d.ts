@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import * as d3Axis from 'd3-axis';
 export declare class CanvasDataPlot {
-    parent: d3.Selection<HTMLElement, any, HTMLElement, any>;
+    parent: d3.Selection<any, {}, HTMLElement, {}>;
     canvasDimensions: Array<number>;
     config: CanvasDataPlot.Config;
     data: Array<Array<[number, number]>>;
@@ -44,8 +44,8 @@ export declare class CanvasDataPlot {
     yScale: d3Axis.AxisScale<number>;
     xAxis: d3Axis.Axis<number>;
     yAxis: d3Axis.Axis<number>;
-    xAxisLabel: d3.Selection<any, {}, any, {}>;
-    yAxisLabel: d3.Selection<any, {}, any, {}>;
+    xAxisLabel: d3.Selection<SVGTextElement, {}, any, {}>;
+    yAxisLabel: d3.Selection<SVGTextElement, {}, any, {}>;
     yAxisGroup: d3.Selection<any, {}, any, {}>;
     xAxisGroup: d3.Selection<any, {}, any, {}>;
     tooltip: d3.Selection<any, {}, any, {}>;
@@ -54,7 +54,7 @@ export declare class CanvasDataPlot {
     showTooltips: boolean;
     xAxisZoom: boolean;
     yAxisZoom: boolean;
-    constructor(parentElement: d3.Selection<HTMLElement, any, HTMLElement, any>, canvasDimensions: Array<number>, config?: CanvasDataPlot.Config);
+    constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CanvasDataPlot.Config);
     zoomFunction(): void;
     addDataSet(uniqueID: number, label: string, dataSet: Array<[number, number]>, colorString: string, updateDomains: boolean, copyData: boolean): void;
     addDataPoint(uniqueID: number, dataPoint: [number, number], updateDomains: boolean, copyData: boolean): void;

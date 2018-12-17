@@ -10,5 +10,11 @@
     "exclude": [
         "node_modules",
         "dist"
-    ]
+    ],
+    
+    "presets":  [
+        "env",
+        {"modules": false}
+     ]
+      
 }

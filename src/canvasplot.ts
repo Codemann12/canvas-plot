@@ -1,14 +1,14 @@
 
 import * as d3 from 'd3';
 import * as d3Axis from 'd3-axis';
-//import * as d3Scale from 'd3-scale';
-//import * as $ from "jquery";
+import * as d3Scale from 'd3-scale';
+import * as $ from "jquery";
 import { namespace, D3ZoomEvent, ZoomBehavior, ZoomTransform, Selection, ticks } from 'd3';
 
 
 export class CanvasDataPlot{
 
-	parent: d3.Selection<HTMLElement, any , HTMLElement , any>;
+	parent: d3.Selection<any, {} , HTMLElement , {}>;
 	canvasDimensions: Array<number>;
 	config: CanvasDataPlot.Config;
 	data : Array<Array<[number, number]>>;
@@ -54,8 +54,8 @@ export class CanvasDataPlot{
 	yScale: d3Axis.AxisScale<number>;
 	xAxis: d3Axis.Axis<number>;
 	yAxis: d3Axis.Axis<number>;
-	xAxisLabel: d3.Selection<any, {} , any , {}>;
-	yAxisLabel: d3.Selection<any, {} , any , {}>;
+	xAxisLabel: d3.Selection<SVGTextElement, {} , any , {}>; 
+	yAxisLabel: d3.Selection<SVGTextElement, {} , any , {}>;
 	yAxisGroup: d3.Selection<any, {} , any , {}>;
 	xAxisGroup: d3.Selection<any, {} , any , {}>;
 
@@ -70,7 +70,7 @@ export class CanvasDataPlot{
 	
 	
 	
-	constructor(parentElement: d3.Selection<HTMLElement, any , HTMLElement , any>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
+	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
 		this.parent = parentElement;
 		this.canvasDimensions = canvasDimensions;
 		this.config = config;
@@ -137,11 +137,11 @@ export class CanvasDataPlot{
 		this.yScale = null;
 		this.xAxis  = null;
 		this.yAxis  = null;
-
+//xAxisLabel generating typeError check this later on callback is null because the axis are initialized with null---
 	this.yAxisGroup = this.svgTranslateGroup.append("g")
 		.attr("class", "y cvpAxis")
 		.call(this.yAxis);
-
+/*
 	this.xAxisGroup = this.svgTranslateGroup.append("g")
 		.attr("class", "x cvpAxis")
 		.attr("transform", "translate(0,"+this.height+")")
@@ -176,8 +176,7 @@ export class CanvasDataPlot{
 	
 
 	if(this.showTooltips) {
-		//define updateTooltip later
-		//this.div.on("mousemove", (this.updateTooltip).bind(this));
+		this.div.on("mousemove", (this.updateTooltip).bind(this));
 	}
 
 	this.xAxisZoom = true;
@@ -189,6 +188,7 @@ export class CanvasDataPlot{
 	drawCanvas(): void {};
 	
 	*/	
+	
 	
 	}
 	// to be implement later
@@ -226,7 +226,7 @@ export class CanvasDataPlot{
 			this.updateDisplayIndices();
 			this.drawCanvas();
 		}
-	};
+	}
 
 
 
@@ -244,7 +244,7 @@ export class CanvasDataPlot{
 			this.updateDisplayIndices();
 			this.drawCanvas();
 		}
-	};
+	}
 
 
 
@@ -261,7 +261,7 @@ export class CanvasDataPlot{
 			this.updateLegend();
 			this.drawCanvas();
 		}
-	};
+	}
 	
 
 	setZoomXAxis(zoomX: boolean) {
@@ -270,7 +270,7 @@ export class CanvasDataPlot{
 		}
 		this.xAxisZoom = zoomX;
 		this.resetZoomListenerAxes();
-	};
+	}
 	
 
 	setZoomYAxis(zoomY: boolean) {
@@ -279,7 +279,7 @@ export class CanvasDataPlot{
 		}
 		this.yAxisZoom = zoomY;
 		this.resetZoomListenerAxes();
-	};
+	}
 
 	resize(dimensions: Array<number>): void {
 		this.totalWidth = Math.max(this.minCanvasWidth, dimensions[0]);
@@ -318,7 +318,7 @@ export class CanvasDataPlot{
 		this.updateDisplayIndices();
 		this.resetZoomListenerAxes();
 		this.redrawCanvasAndAxes();
-	};
+	}
 
 
 	updateDomains(xDomain: Array<number>, yDomain: Array<number>, makeItNice: boolean): void {
@@ -332,16 +332,16 @@ export class CanvasDataPlot{
 		this.updateDisplayIndices();
 		this.resetZoomListenerAxes();
 		this.redrawCanvasAndAxes();
-	};
+	}
 	
 
 	getXDomain(): Array<number> {
 		return this.xScale.domain();
-	};
+	}
 	
 	getYDomain(): Array<number>{
 		return this.yScale.domain();
-	};
+	}
 
 
 	calculateXDomain(): Array<number> {
@@ -369,7 +369,7 @@ export class CanvasDataPlot{
 			max = min+1;
 		}
 		return [min, max];
-	};
+	}
 
 
     //data : Array<Array<[number, number]>>;
@@ -397,12 +397,12 @@ export class CanvasDataPlot{
 			max += 1;
 		}
 		return [min, max];
-	};
+	}
 
 
 	destroy(): void {
 		this.div.remove();
-	};
+	}
 
 
 	setupXScaleAndAxis(){
@@ -413,7 +413,7 @@ export class CanvasDataPlot{
 	
 		this.xAxis = d3.axisBottom(this.xScale)
 		  			.ticks(Math.round(this.xTicksPerPixel*this.width));
-	};
+	}
 
 
 
@@ -426,13 +426,13 @@ export class CanvasDataPlot{
 	
 		this.yAxis = d3.axisLeft(this.yScale)
 			.ticks(Math.round(this.yTicksPerPixel*this.height));
-	};
+	}
 
 
 	// check return type later ..
 	getDataID(index: number): string {
 		return (this.dataIDs.length > index ? String(this.dataIDs[index]) : "");
-	};
+	}
 
 
 	updateTooltip() {
@@ -464,16 +464,16 @@ export class CanvasDataPlot{
 		if(!hitMarker){
 			this.removeTooltip();
 		}
-	};
+	}
 
 
 	getTooltipStringX(dataPoint: [number, number]): string {
 		return "x = "+dataPoint[0];
-	};
+	}
 	
 	getTooltipStringY (dataPoint: [number, number]): string {
 		return "y = "+dataPoint[1];
-	};
+	}
 
 
 	showTooltip(position: Array<number>, color: string, xText: string, yText: string): void {
@@ -503,7 +503,7 @@ export class CanvasDataPlot{
 		var nodeX = <SVGTextContentElement>xTextElem.node();//using assertion
 		var nodeY = <SVGTextContentElement>yTextElem.node();
 		tooltipBG.attr("transform", "scale("+(1.1*Math.max(nodeX.getComputedTextLength(), nodeY.getComputedTextLength())/200)+",1)");
-	};
+	}
 
 
 	removeTooltip(): void {
@@ -512,7 +512,7 @@ export class CanvasDataPlot{
 		}
 		this.tooltip.remove();
 		this.tooltip = null;
-	};
+	}
 
 
 	updateLegend(): void{
@@ -556,7 +556,7 @@ export class CanvasDataPlot{
 	this.legendBG.attr("width", this.legendWidth);
 	this.legend
 		.attr("transform", "translate("+(this.width - this.legendWidth - this.legendMargin)+", "+this.legendMargin+")");
-	};
+	}
 
 
 	findLargestSmaller(d: Array<Array<number>>, ia: number, ib: number, v:  number): number {
@@ -567,7 +567,7 @@ export class CanvasDataPlot{
 		var imiddle = Math.floor(0.5*(ia+ib));
 	
 		return this.xScale(d[imiddle][0]) <= v ? this.findLargestSmaller(d, imiddle, ib, v) : this.findLargestSmaller(d, ia, imiddle, v);
-	};
+	}
 
 
 	updateDisplayIndices(): void{
@@ -582,13 +582,13 @@ export class CanvasDataPlot{
 			this.displayIndexStart[i] = iStart;
 			this.displayIndexEnd[i] = iEnd;
 		}
-	};
+	}
 	
 	redrawCanvasAndAxes(): void {
 		/* this.xAxisGroup.call(this.xAxis);
 		this.yAxisGroup.call(this.yAxis); */
 		this.drawCanvas();
-	};
+	}
 	
 	drawCanvas(): void {
 
@@ -601,7 +601,7 @@ export class CanvasDataPlot{
 			this.drawDataSet(i);
 		}
 		
-	};
+	}
 
 	 
 	drawGrid() {
@@ -622,7 +622,7 @@ export class CanvasDataPlot{
 			}).bind(this));
 		this.canvas.stroke();
 		
-	};
+	}
 
 
 	
@@ -643,7 +643,7 @@ drawDataSet(dataIndex: number): void {
 			this.markerRadius, 0, 2*Math.PI);
 		this.canvas.stroke();
 	}
-};
+}
 
 
 resetZoomListenerAxes(): void {
@@ -652,7 +652,7 @@ resetZoomListenerAxes(): void {
 	   (this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */  
 	   //this.div.call(this.zoomListener.transform, d3.zoomIdentity);
 	   
-};
+}
 
 updateZoomValues(scale: number, translate:number): void{
    this.zoomListener
@@ -660,7 +660,7 @@ updateZoomValues(scale: number, translate:number): void{
 	   .translate(translate);
    this.updateDisplayIndices();
    this.redrawCanvasAndAxes();
-};
+}
 
 
 CanvasPlot_shallowObjectCopy(inObj: any): any{
@@ -693,9 +693,6 @@ CanvasPlot_appendToObject(obj: any, objToAppend: any): void {
 	});
 }
 	
-
-	
-
 }
 
 export namespace CanvasDataPlot{

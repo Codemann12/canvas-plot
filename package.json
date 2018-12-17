@@ -16,11 +16,11 @@
   },
   "devDependencies": {
     "rollup": "^0.67.4",
-    "rollup-plugin-node-resolve": "^3.5.5"
+    "rollup-plugin-node-resolve": "^4.0.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc && rollup -c"
   },
   "repository": {
     "type": "git",
