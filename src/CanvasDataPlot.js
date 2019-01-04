@@ -26,7 +26,6 @@ export class CanvasDataPlot {
         this.legendXPadding = config.legendXPadding || 5;
         this.legendYPadding = config.legendYPadding || 6;
         this.legendLineHeight = config.legendLineHeight || 11;
-        //xAxisLabel generating typeError check this later on
         this.margin = config.plotMargins || { top: 20, right: 20, bottom: (this.xAxisLabelText.length > 0 ? 60 : 30),
             left: (this.yAxisLabelText.length > 0) ? 65 : 50 };
         this.showToolstips = (config.hasOwnProperty("showTooltips") ? config.showToolstips : true);
@@ -58,56 +57,48 @@ export class CanvasDataPlot {
         this.yScale = null;
         this.xAxis = null;
         this.yAxis = null;
+        //xAxisLabel generating typeError check this later on callback is null because the axis are initialized with null---
         this.yAxisGroup = this.svgTranslateGroup.append("g")
             .attr("class", "y cvpAxis")
             .call(this.yAxis);
-        /*
-            this.xAxisGroup = this.svgTranslateGroup.append("g")
-                .attr("class", "x cvpAxis")
-                .attr("transform", "translate(0,"+this.height+")")
-                .call(this.xAxis);
+        this.xAxisGroup = this.svgTranslateGroup.append("g")
+            .attr("class", "x cvpAxis")
+            .attr("transform", "translate(0," + this.height + ")")
+            .call(this.xAxis);
+        this.xAxisLabel = null;
+        this.yAxisLabel = null;
+        if (this.xAxisLabelText.length > 0) {
+            this.xAxisLabel = this.svgTranslateGroup.append("text")
+                .attr("class", "cvpLabel")
+                .attr("x", Math.round(0.5 * this.width))
+                .attr("y", this.height + 40)
+                .attr("text-anchor", "middle")
+                .text(this.xAxisLabelText);
+        }
+        if (this.yAxisLabelText.length > 0) {
+            this.yAxisLabel = this.svg.append("text")
+                .attr("class", "cvpLabel")
+                .attr("x", Math.round(-0.5 * this.height - this.margin.top))
+                .attr("y", 15)
+                .attr("transform", "rotate(-90)")
+                .attr("text-anchor", "middle")
+                .text(this.yAxisLabelText);
+        }
+        this.tooltip = null;
+        this.legend = null;
+        this.legendBG = null;
+        this.legendWidth = 0;
+        if (this.showTooltips) {
+            this.div.on("mousemove", (this.updateTooltip).bind(this));
+        }
+        this.xAxisZoom = true;
+        this.yAxisZoom = true;
+        /*this.resetZoomListenerAxes();
+        setupXScaleAndAxis(): void{};
+        setupYScaleAndAxis(): void{};
+        drawCanvas(): void {};
         
-            this.xAxisLabel = null;
-            this.yAxisLabel = null;
-            if(this.xAxisLabelText.length > 0) {
-                this.xAxisLabel = this.svgTranslateGroup.append("text")
-                    .attr("class", "cvpLabel")
-                    .attr("x", Math.round(0.5*this.width))
-                    .attr("y", this.height + 40)
-                    .attr("text-anchor", "middle")
-                    .text(this.xAxisLabelText);
-            }
-        
-        
-            if(this.yAxisLabelText.length > 0) {
-                this.yAxisLabel = this.svg.append("text")
-                    .attr("class", "cvpLabel")
-                    .attr("x", Math.round(-0.5*this.height - this.margin.top))
-                    .attr("y", 15)
-                    .attr("transform", "rotate(-90)")
-                    .attr("text-anchor", "middle")
-                    .text(this.yAxisLabelText);
-            }
-        
-            this.tooltip = null;
-            this.legend = null;
-            this.legendBG = null;
-            this.legendWidth = 0;
-            
-        
-            if(this.showTooltips) {
-                this.div.on("mousemove", (this.updateTooltip).bind(this));
-            }
-        
-            this.xAxisZoom = true;
-            this.yAxisZoom = true;
-            
-            /*this.resetZoomListenerAxes();
-            setupXScaleAndAxis(): void{};
-            setupYScaleAndAxis(): void{};
-            drawCanvas(): void {};
-            
-            */
+        */
     }
     // to be implement later
     zoomFunction() { }
@@ -300,7 +291,6 @@ export class CanvasDataPlot {
         this.yAxis = d3.axisLeft(this.yScale)
             .ticks(Math.round(this.yTicksPerPixel * this.height));
     }
-    // check return type later ..
     getDataID(index) {
         return (this.dataIDs.length > index ? String(this.dataIDs[index]) : "");
     }
@@ -522,4 +512,4 @@ export class CanvasDataPlot {
         });
     }
 }
-//# sourceMappingURL=canvasplot.js.map
+//# sourceMappingURL=CanvasDataPlot.js.map

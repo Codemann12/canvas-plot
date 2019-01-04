@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (factory());
-}(this, (function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.canvasplot = {})));
+}(this, (function (exports) { 'use strict';
 
   function ascending(a, b) {
     return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsv(delimiter) {
+  function dsvFormat(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,19 +3479,9 @@
     };
   }
 
-  var csv = dsv(",");
+  var csv = dsvFormat(",");
 
-  var csvParse = csv.parse;
-  var csvParseRows = csv.parseRows;
-  var csvFormat = csv.format;
-  var csvFormatRows = csv.formatRows;
-
-  var tsv = dsv("\t");
-
-  var tsvParse = tsv.parse;
-  var tsvParseRows = tsv.parseRows;
-  var tsvFormat = tsv.format;
-  var tsvFormatRows = tsv.formatRows;
+  var tsv = dsvFormat("\t");
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -4793,8 +4783,6 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
-  var mondays = monday.range;
-  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4884,8 +4872,6 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
-  var utcMondays = utcMonday.range;
-  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -7168,40 +7154,8 @@
       }
   }
 
- 
-  function getDemoPlotSize() {
-      return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
-  }
-  let data1 = [[-1, 5], [0.5, 6], [5, -2.5], [6, 1], [10, 9], [20, -55]];
-  var html$1 = select("div").append("p");
+  exports.CanvasTimeSeriesPlot = CanvasTimeSeriesPlot;
 
-  var plot1 = new CanvasDataPlot(html$1, [1000, 900], {
-      xAxisLabel: "IQ",
-      yAxisLabel: "Test Score",
-      markerLineWidth: 3,
-      markerRadius: 5
-  });
-  console.log(plot1)
-  plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
-  plot1.addDataPoint("ds1", [15, 0]); // Will not be added! (x values have to be in ascending order)
-  plot1.addDataPoint("ds1", [20, 10]); // Will be added.
-  plot1.addDataPoint("ds1", [21, 0]);
-  plot1.updateDomains([-2, 22], [-60, 15], true);
-  // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
-  var ts1 = [];
-  var ts2 = [];
-  var now$1 = new Date();
-  for (var i = 0; i < 100; ++i) {
-      var time$1 = new Date(now$1);
-      time$1.setHours(i);
-      ts1.push([time$1, Math.random()]);
-      ts2.push([time$1, Math.random()]);
-  }
-  var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
-      yAxisLabel: "Voltage [V]"
-  });
-  console.log("this is the second plot "+plot2)
-  plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
-  plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, true);
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

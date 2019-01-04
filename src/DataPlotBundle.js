@@ -6617,6 +6617,7 @@
           this.yScale = null;
           this.xAxis = null;
           this.yAxis = null;
+          //xAxisLabel generating typeError check this later on callback is null because the axis are initialized with null---
           this.yAxisGroup = this.svgTranslateGroup.append("g")
               .attr("class", "y cvpAxis")
               .call(this.yAxis);
@@ -6850,7 +6851,6 @@
           this.yAxis = axisLeft(this.yScale)
               .ticks(Math.round(this.yTicksPerPixel * this.height));
       }
-      // check return type later ..
       getDataID(index) {
           return (this.dataIDs.length > index ? String(this.dataIDs[index]) : "");
       }
@@ -7071,6 +7071,8 @@
       }
   }
 
+  exports.CanvasDataPlot = CanvasDataPlot;
 
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

@@ -12,7 +12,7 @@ export class CanvasDataPlot{
 	canvasDimensions: Array<number>;
 	config: CanvasDataPlot.Config;
 	data : Array<Array<[number, number]>>;
-	dataIDs: Array<number>;
+	dataIDs: Array<string>;
 	dataLabels: Array<String>;
 	displayIndexStart: Array<number>; 
 	displayIndexEnd: Array<number>;
@@ -50,7 +50,7 @@ export class CanvasDataPlot{
 	svg: d3.Selection<any, {} , any , {}>;
 	svgTranslateGroup: d3.Selection<any, {} , any , {}>;
 
-	xScale: d3Axis.AxisScale<number>;
+	xScale: d3Axis.AxisScale<any>;
 	yScale: d3Axis.AxisScale<number>;
 	xAxis: d3Axis.Axis<number>;
 	yAxis: d3Axis.Axis<number>;
@@ -137,11 +137,11 @@ export class CanvasDataPlot{
 		this.yScale = null;
 		this.xAxis  = null;
 		this.yAxis  = null;
-//xAxisLabel generating typeError check this later on callback is null because the axis are initialized with null---
+// axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
 	this.yAxisGroup = this.svgTranslateGroup.append("g")
 		.attr("class", "y cvpAxis")
 		.call(this.yAxis);
-/*
+
 	this.xAxisGroup = this.svgTranslateGroup.append("g")
 		.attr("class", "x cvpAxis")
 		.attr("transform", "translate(0,"+this.height+")")
@@ -197,7 +197,7 @@ export class CanvasDataPlot{
 	
 
 
-    addDataSet(uniqueID: number, label: string, dataSet: Array<[number, number]>, colorString: string, updateDomains: boolean, copyData: boolean) : void{
+    addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[number, number]>, colorString?: string, updateDomains?: boolean, copyData?: boolean) : void{
     	this.dataIDs.push(uniqueID);
 		this.dataLabels.push(label);
 		this.dataColors.push(colorString);
@@ -225,12 +225,13 @@ export class CanvasDataPlot{
 		else {
 			this.updateDisplayIndices();
 			this.drawCanvas();
+			
 		}
 	}
 
 
 
-    addDataPoint(uniqueID: number, dataPoint: [number, number], updateDomains: boolean, copyData: boolean): void {
+    addDataPoint(uniqueID?: string, dataPoint?: [number, number], updateDomains?: boolean, copyData?: boolean): void {
 		let i: number = this.dataIDs.indexOf(uniqueID);
 		if(i < 0 || (this.data[i].length > 0 && this.data[i][this.data[i].length-1][0] > dataPoint[0])) {
 			return;
@@ -248,7 +249,7 @@ export class CanvasDataPlot{
 
 
 
-	removeDataSet(uniqueID: number): void {
+	removeDataSet(uniqueID: string): void {
 		let index: number = this.dataIDs.indexOf(uniqueID);
 		if(index >= 0) {
 			this.data.splice(index, 1);
@@ -429,7 +430,7 @@ export class CanvasDataPlot{
 	}
 
 
-	// check return type later ..
+
 	getDataID(index: number): string {
 		return (this.dataIDs.length > index ? String(this.dataIDs[index]) : "");
 	}
@@ -699,7 +700,7 @@ export namespace CanvasDataPlot{
 	export interface Config{
 		xAxisLabel?: string,
 		yAxisLabel?: string,
-		markerLineWidth?:number,
+		markerLineWidth?: number,
 		markerRadius?: number,
 		updateViewCallback?: undefined,
 		disableLegend?: boolean,
@@ -716,7 +717,10 @@ export namespace CanvasDataPlot{
 		plotMargins?: PlotMargins,
 		showToolstips?: boolean,
 		hasOwnProperty?(prop: string): boolean,
-		tooltipRadius?: number
+		tooltipRadius?: number;
+		plotLineWidth?: number;
+		maxInformationDensity?: number;
+		showMarkerDensity?: number;
 	}
 
 	export interface PlotMargins{

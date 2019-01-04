@@ -5,7 +5,7 @@ export declare class CanvasDataPlot {
     canvasDimensions: Array<number>;
     config: CanvasDataPlot.Config;
     data: Array<Array<[number, number]>>;
-    dataIDs: Array<number>;
+    dataIDs: Array<string>;
     dataLabels: Array<String>;
     displayIndexStart: Array<number>;
     displayIndexEnd: Array<number>;
@@ -40,7 +40,7 @@ export declare class CanvasDataPlot {
     canvas: CanvasRenderingContext2D;
     svg: d3.Selection<any, {}, any, {}>;
     svgTranslateGroup: d3.Selection<any, {}, any, {}>;
-    xScale: d3Axis.AxisScale<number>;
+    xScale: d3Axis.AxisScale<any>;
     yScale: d3Axis.AxisScale<number>;
     xAxis: d3Axis.Axis<number>;
     yAxis: d3Axis.Axis<number>;
@@ -56,9 +56,9 @@ export declare class CanvasDataPlot {
     yAxisZoom: boolean;
     constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CanvasDataPlot.Config);
     zoomFunction(): void;
-    addDataSet(uniqueID: number, label: string, dataSet: Array<[number, number]>, colorString: string, updateDomains: boolean, copyData: boolean): void;
-    addDataPoint(uniqueID: number, dataPoint: [number, number], updateDomains: boolean, copyData: boolean): void;
-    removeDataSet(uniqueID: number): void;
+    addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[number, number]>, colorString?: string, updateDomains?: boolean, copyData?: boolean): void;
+    addDataPoint(uniqueID?: string, dataPoint?: [number, number], updateDomains?: boolean, copyData?: boolean): void;
+    removeDataSet(uniqueID: string): void;
     setZoomXAxis(zoomX: boolean): void;
     setZoomYAxis(zoomY: boolean): void;
     resize(dimensions: Array<number>): void;
@@ -110,6 +110,9 @@ export declare namespace CanvasDataPlot {
         showToolstips?: boolean;
         hasOwnProperty?(prop: string): boolean;
         tooltipRadius?: number;
+        plotLineWidth?: number;
+        maxInformationDensity?: number;
+        showMarkerDensity?: number;
     }
     interface PlotMargins {
         top?: number;
