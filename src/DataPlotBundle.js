@@ -6617,7 +6617,7 @@
           this.yScale = null;
           this.xAxis = null;
           this.yAxis = null;
-          //xAxisLabel generating typeError check this later on callback is null because the axis are initialized with null---
+          // axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
           this.yAxisGroup = this.svgTranslateGroup.append("g")
               .attr("class", "y cvpAxis")
               .call(this.yAxis);

@@ -111,6 +111,79 @@ export class CanvasTimeSeriesPlot{
 
 
 
+    
+    setupXScaleAndAxis() {
+        CanvasDataPlot.prototype.xScale = d3.scaleTime()
+            .domain(CanvasDataPlot.prototype.calculateXDomain())
+            .range([0, CanvasDataPlot.prototype.width])
+            .nice();
+    
+        
+        var formatMilliSecond = d3.timeFormat(".%L"),
+            formatSecond = d3.timeFormat(":%S"),
+            formatHour = d3.timeFormat("%I:%p"),
+            formatWeek = d3.timeFormat("%b %d"),
+            formatMonth = d3.timeFormat("%B"),
+            formatYear = d3.timeFormat("%Y");
+
+
+        let multiFormat = (date: Date): string =>{
+            return (d3.timeSecond(date) < date ? formatMilliSecond
+            : d3.timeMinute(date) < date ? formatSecond
+            : d3.timeDay(date) < date ? formatHour
+            : d3.timeWeek(date) < date ?  formatWeek
+            : d3.timeYear(date) < date ? formatMonth
+            : formatYear)(date);
+        }
+        
+    
+        CanvasDataPlot.prototype.xAxis = d3.axisBottom(CanvasDataPlot.prototype.xScale)
+            .tickFormat(multiFormat)
+            .ticks(Math.round(CanvasDataPlot.prototype.xTicksPerPixel*CanvasDataPlot.prototype.width));
+    }
+
+
+    drawDataSet(dataIndex: number): void{
+        var d = CanvasDataPlot.prototype.data[dataIndex];
+        if(d.length < 1) {
+            return;
+        }
+        var iStart = CanvasDataPlot.prototype.displayIndexStart[dataIndex];
+        var iEnd = CanvasDataPlot.prototype.displayIndexEnd[dataIndex];
+        var informationDensity = this.informationDensity[dataIndex];
+    
+        var drawEvery = 1;
+        if(informationDensity > this.maxInformationDensity) {
+            drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
+        }
+    
+        // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
+        iStart = Math.max(0, iStart - iStart%drawEvery);
+    
+        CanvasDataPlot.prototype.canvas.beginPath();
+        CanvasDataPlot.prototype.canvas.moveTo(CanvasDataPlot.prototype.xScale(d[iStart][0]), CanvasDataPlot.prototype.yScale(d[iStart][1]));
+        for(var i=iStart; i<=iEnd; i=i+drawEvery) {
+            CanvasDataPlot.prototype.canvas.lineTo(CanvasDataPlot.prototype.xScale(d[i][0]),
+            CanvasDataPlot.prototype.yScale(d[i][1]));
+        }
+        var iLast = Math.min(d.length-1 , iEnd+drawEvery);
+        CanvasDataPlot.prototype.canvas.lineTo(CanvasDataPlot.prototype.xScale(d[iLast][0]),
+        CanvasDataPlot.prototype.yScale(d[iLast][1]));
+        CanvasDataPlot.prototype.canvas.lineWidth = this.plotLineWidth;
+        CanvasDataPlot.prototype.canvas.strokeStyle = CanvasDataPlot.prototype.dataColors[dataIndex];
+        CanvasDataPlot.prototype.canvas.stroke();
+    
+        if(informationDensity <= this.showMarkerDensity) {
+            CanvasDataPlot.prototype.canvas.lineWidth = CanvasDataPlot.prototype.markerLineWidth;
+            for(var i=iStart; i<=iLast; ++i) {
+                CanvasDataPlot.prototype.canvas.beginPath();
+                CanvasDataPlot.prototype.canvas.arc(CanvasDataPlot.prototype.xScale(d[i][0]), CanvasDataPlot.prototype.yScale(d[i][1]),
+                    CanvasDataPlot.prototype.markerRadius, 0, 2*Math.PI);
+                CanvasDataPlot.prototype.canvas.stroke();
+            }
+        }
+    }
+    
 	
 }
 

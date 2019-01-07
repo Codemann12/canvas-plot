@@ -113,6 +113,9 @@ export declare namespace CanvasDataPlot {
         plotLineWidth?: number;
         maxInformationDensity?: number;
         showMarkerDensity?: number;
+        vectorScale?: number;
+        scaleUnits?: string;
+        scaleLength?: number;
     }
     interface PlotMargins {
         top?: number;

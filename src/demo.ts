@@ -1,5 +1,6 @@
 import {CanvasDataPlot} from './CanvasDataPlot'
 import{CanvasTimeSeriesPlot} from './CanvasTimeSeriesPlot'
+import{CanvasVectorSeriesPlot} from './CanvasVectorSeriesPlot'
 import * as d3 from 'd3';
 
 console.log("test")

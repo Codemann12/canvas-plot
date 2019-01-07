@@ -11,4 +11,6 @@ export declare class CanvasTimeSeriesPlot {
     updateDisplayIndices(): void;
     updateTooltipn(): void;
     getTooltipStringX(dataPoint: Array<Date>): string;
+    setupXScaleAndAxis(): void;
+    drawDataSet(dataIndex: number): void;
 }

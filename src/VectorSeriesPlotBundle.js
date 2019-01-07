@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsvFormat(delimiter) {
+  function dsv(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,9 +3479,19 @@
     };
   }
 
-  var csv = dsvFormat(",");
+  var csv = dsv(",");
 
-  var tsv = dsvFormat("\t");
+  var csvParse = csv.parse;
+  var csvParseRows = csv.parseRows;
+  var csvFormat = csv.format;
+  var csvFormatRows = csv.formatRows;
+
+  var tsv = dsv("\t");
+
+  var tsvParse = tsv.parse;
+  var tsvParseRows = tsv.parseRows;
+  var tsvFormat = tsv.format;
+  var tsvFormatRows = tsv.formatRows;
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -4802,6 +4812,8 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
+  var mondays = monday.range;
+  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4891,6 +4903,8 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
+  var utcMondays = utcMonday.range;
+  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -7352,7 +7366,22 @@
       }
   }
 
-  exports.CanvasTimeSeriesPlot = CanvasTimeSeriesPlot;
+  class CanvasVectorSeriesPlot {
+      constructor(parentElement, canvasDimensions, config = {}) {
+          this.vectorScale = config.vectorScale || 2.0e5;
+          this.scaleUnits = config.scaleUnits || "units";
+          this.scaleLength = config.scaleLength || 75;
+          this.scaleTextElem = null;
+          var configCopy = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(config);
+          //configCopy["showTooltips"] = false;
+          if (!("invertYAxis" in configCopy)) {
+              configCopy["invertYAxis"] = true;
+          }
+          CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
+      }
+  }
+
+  exports.CanvasVectorSeriesPlot = CanvasVectorSeriesPlot;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
