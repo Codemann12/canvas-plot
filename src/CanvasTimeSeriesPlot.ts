@@ -1,13 +1,8 @@
-
 import * as d3 from 'd3';
-import * as d3Axis from 'd3-axis';
-import * as d3Scale from 'd3-scale';
-import * as $ from "jquery";
-import { namespace, D3ZoomEvent, ZoomBehavior, ZoomTransform, Selection, ticks } from 'd3';
 import {CanvasDataPlot} from './CanvasDataPlot'
 
 
-export class CanvasTimeSeriesPlot{
+export class CanvasTimeSeriesPlot extends CanvasDataPlot{
     informationDensity: Array<number>;
     plotLineWidth: number;
     maxInformationDensity: number;
@@ -15,6 +10,7 @@ export class CanvasTimeSeriesPlot{
    
 	
 	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
+        super(parentElement, canvasDimensions, config);
         config = config || {};
         this.informationDensity = [];
         this.plotLineWidth = config.plotLineWidth || 1;
@@ -95,7 +91,7 @@ export class CanvasTimeSeriesPlot{
     }
     
 
-    getTooltipStringX(dataPoint: Array<Date>): string{
+    getTooltipStringX(dataPoint: [Date, number]): string{
         var zeroPad2 = function(n: number): string{
             return n<10 ? ("0"+n) : n.toString();
         };

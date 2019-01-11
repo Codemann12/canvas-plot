@@ -1,7 +1,8 @@
 import * as d3 from 'd3';
 import { CanvasDataPlot } from './CanvasDataPlot';
-export class CanvasTimeSeriesPlot {
+export class CanvasTimeSeriesPlot extends CanvasDataPlot {
     constructor(parentElement, canvasDimensions, config = {}) {
+        super(parentElement, canvasDimensions, config);
         config = config || {};
         this.informationDensity = [];
         this.plotLineWidth = config.plotLineWidth || 1;

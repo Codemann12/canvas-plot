@@ -93,12 +93,8 @@ export class CanvasDataPlot {
         }
         this.xAxisZoom = true;
         this.yAxisZoom = true;
-        /*this.resetZoomListenerAxes();
-        setupXScaleAndAxis(): void{};
-        setupYScaleAndAxis(): void{};
-        drawCanvas(): void {};
-        
-        */
+        this.drawCanvas();
+        this.resetZoomListenerAxes();
     }
     // to be implement later
     zoomFunction() { }
@@ -233,7 +229,8 @@ export class CanvasDataPlot {
             }
         });
         if (nonEmptySets.length < 1) {
-            return [0, 1];
+            //return [0, 1]; 
+            return [];
         }
         var min = nonEmptySets[0][0][0];
         var max = nonEmptySets[0][nonEmptySets[0].length - 1][0];
@@ -243,9 +240,10 @@ export class CanvasDataPlot {
             min = minCandidate < min ? minCandidate : min;
             max = max < maxCandidate ? maxCandidate : max;
         }
-        if (max - min <= 0) {
-            min = 1 * max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
-            max = min + 1;
+        // check this block during test phase
+        if (max.getTime() - min.getTime() <= 0) {
+            min.setTime((1000 * 60 * 60 * 24) * max.getTime()); //NOTE: 1* is neceseccary to handle Dates in derived classes.
+            max.setTime(min.getTime() + (1000 * 60 * 60 * 24));
         }
         return [min, max];
     }

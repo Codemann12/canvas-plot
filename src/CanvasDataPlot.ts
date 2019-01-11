@@ -1,9 +1,6 @@
-
 import * as d3 from 'd3';
 import * as d3Axis from 'd3-axis';
-import * as d3Scale from 'd3-scale';
-import * as $ from "jquery";
-import { namespace, D3ZoomEvent, ZoomBehavior, ZoomTransform, Selection, ticks } from 'd3';
+
 
 
 export class CanvasDataPlot{
@@ -11,7 +8,7 @@ export class CanvasDataPlot{
 	parent: d3.Selection<any, {} , HTMLElement , {}>;
 	canvasDimensions: Array<number>;
 	config: CanvasDataPlot.Config;
-	data : Array<Array<[number, number]>>;
+	data : Array<Array<[Date, number]>>;
 	dataIDs: Array<string>;
 	dataLabels: Array<String>;
 	displayIndexStart: Array<number>; 
@@ -181,15 +178,8 @@ export class CanvasDataPlot{
 
 	this.xAxisZoom = true;
 	this.yAxisZoom = true;
-	
-	/*this.resetZoomListenerAxes();
-	setupXScaleAndAxis(): void{};
-	setupYScaleAndAxis(): void{};
-	drawCanvas(): void {};
-	
-	*/	
-	
-	
+	this.drawCanvas();
+	this.resetZoomListenerAxes();
 	}
 	// to be implement later
 	zoomFunction(): void {}	
@@ -197,7 +187,7 @@ export class CanvasDataPlot{
 	
 
 
-    addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[number, number]>, colorString?: string, updateDomains?: boolean, copyData?: boolean) : void{
+    addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[Date, number]>, colorString?: string, updateDomains?: boolean, copyData?: boolean) : void{
     	this.dataIDs.push(uniqueID);
 		this.dataLabels.push(label);
 		this.dataColors.push(colorString);
@@ -231,7 +221,7 @@ export class CanvasDataPlot{
 
 
 
-    addDataPoint(uniqueID?: string, dataPoint?: [number, number], updateDomains?: boolean, copyData?: boolean): void {
+    addDataPoint(uniqueID?: string, dataPoint?: [Date, number], updateDomains?: boolean, copyData?: boolean): void {
 		let i: number = this.dataIDs.indexOf(uniqueID);
 		if(i < 0 || (this.data[i].length > 0 && this.data[i][this.data[i].length-1][0] > dataPoint[0])) {
 			return;
@@ -322,7 +312,7 @@ export class CanvasDataPlot{
 	}
 
 
-	updateDomains(xDomain: Array<number>, yDomain: Array<number>, makeItNice: boolean): void {
+	updateDomains(xDomain: Array<Date>, yDomain: Array<number>, makeItNice: boolean): void {
 		this.xScale = d3.scaleLinear().domain(xDomain);
 		this.yScale = d3.scaleLinear().domain(yDomain);
 		if(makeItNice) {
@@ -336,7 +326,7 @@ export class CanvasDataPlot{
 	}
 	
 
-	getXDomain(): Array<number> {
+	getXDomain(): Array<Date> {
 		return this.xScale.domain();
 	}
 	
@@ -345,8 +335,8 @@ export class CanvasDataPlot{
 	}
 
 
-	calculateXDomain(): Array<number> {
-		let nonEmptySets: Array<Array<[number,number]>> = [];
+	calculateXDomain(): Array<Date> {
+		let nonEmptySets: Array<Array<[Date,number]>> = [];
 		this.data.forEach(function(ds) {
 			if(ds && ds.length > 0) {
 				nonEmptySets.push(ds);
@@ -354,7 +344,8 @@ export class CanvasDataPlot{
 		});
 		
 		if(nonEmptySets.length < 1) {
-			return [0, 1];
+			//return [0, 1]; 
+			return [];
 		}
 	
 		var min = nonEmptySets[0][0][0];
@@ -365,9 +356,10 @@ export class CanvasDataPlot{
 			min = minCandidate < min ? minCandidate : min;
 			max = max < maxCandidate ? maxCandidate : max;
 		}
-		if(max-min <= 0) {
-			min = 1*max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
-			max = min+1;
+		// check this block during test phase
+		if(max.getTime()-min.getTime() <= 0) {
+			min.setTime((1000 * 60 * 60 * 24)*max.getTime()); //NOTE: 1* is neceseccary to handle Dates in derived classes.
+			max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
 		}
 		return [min, max];
 	}
@@ -375,7 +367,7 @@ export class CanvasDataPlot{
 
     //data : Array<Array<[number, number]>>;
 	calculateYDomain(): Array<number>{
-		let nonEmptySets: Array<Array<[number,number]>> = [];
+		let nonEmptySets: Array<Array<[Date,number]>> = [];
 		this.data.forEach(function(ds) {
 			if(ds && ds.length > 0) {
 				nonEmptySets.push(ds);
@@ -449,7 +441,7 @@ export class CanvasDataPlot{
 		var hitMarker = false;
 		CanvasDataPlot_updateTooltip_graph_loop:
 		for(var i=0; i<nDataSets; ++i) {
-			var d = this.data[i];
+			var d  = this.data[i];
 			var iStart = this.displayIndexStart[i];
 			var iEnd = Math.min(d.length-1, this.displayIndexEnd[i]+1);
 			for(var j=iStart; j<=iEnd; ++j) {
@@ -468,11 +460,11 @@ export class CanvasDataPlot{
 	}
 
 
-	getTooltipStringX(dataPoint: [number, number]): string {
+	getTooltipStringX(dataPoint: [Date, number]): string {
 		return "x = "+dataPoint[0];
 	}
 	
-	getTooltipStringY (dataPoint: [number, number]): string {
+	getTooltipStringY (dataPoint: [Date, number]): string {
 		return "y = "+dataPoint[1];
 	}
 
@@ -560,7 +552,7 @@ export class CanvasDataPlot{
 	}
 
 
-	findLargestSmaller(d: Array<Array<number>>, ia: number, ib: number, v:  number): number {
+	findLargestSmaller(d: Array<[Date, number]>, ia: number, ib: number, v:  number): number {
 		if(this.xScale(d[ia][0]) >= v || ib-ia <= 1) {
 			return ia;
 		}

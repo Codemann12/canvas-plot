@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { CanvasDataPlot } from './CanvasDataPlot';
-export declare class CanvasTimeSeriesPlot {
+export declare class CanvasTimeSeriesPlot extends CanvasDataPlot {
     informationDensity: Array<number>;
     plotLineWidth: number;
     maxInformationDensity: number;
@@ -10,7 +10,7 @@ export declare class CanvasTimeSeriesPlot {
     removeDataSet(uniqueID: string): void;
     updateDisplayIndices(): void;
     updateTooltipn(): void;
-    getTooltipStringX(dataPoint: Array<Date>): string;
+    getTooltipStringX(dataPoint: [Date, number]): string;
     setupXScaleAndAxis(): void;
     drawDataSet(dataIndex: number): void;
 }

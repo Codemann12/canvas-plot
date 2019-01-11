@@ -1,6 +1,6 @@
+import * as d3 from 'd3';
 import { CanvasDataPlot } from './CanvasDataPlot';
 import { CanvasTimeSeriesPlot } from './CanvasTimeSeriesPlot';
-import * as d3 from 'd3';
 console.log("test");
 function getDemoPlotSize() {
     return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];

@@ -1,7 +1,9 @@
-import {CanvasDataPlot} from './CanvasDataPlot'
-import{CanvasTimeSeriesPlot} from './CanvasTimeSeriesPlot'
-import{CanvasVectorSeriesPlot} from './CanvasVectorSeriesPlot'
 import * as d3 from 'd3';
+import {CanvasDataPlot} from './CanvasDataPlot';
+import{CanvasTimeSeriesPlot} from './CanvasTimeSeriesPlot';
+import{CanvasVectorSeriesPlot} from './CanvasVectorSeriesPlot';
+import{CanvasDataPlotGroup} from './CanvasDataPlotGroup';
+
 
 console.log("test")
 
@@ -9,9 +11,8 @@ function getDemoPlotSize() {
 	return [window.innerWidth-100, Math.round(0.45*(window.innerWidth-100))];
 }
 
-let data1: Array<[number, number]> = [[-1,5], [0.5,6], [5,-2.5], [6,1], [10,9], [20,-55]]; 
+let data1: Array<[Date, number]> = [[4,5], [0.5,6], [5,-2.5], [6,1], [10,9], [20,-55]]; 
 var html = d3.select("div").append("p");
-console.log(html)
 
 var plot1 = new CanvasDataPlot(html, [1000, 900], {
     xAxisLabel: "IQ",
@@ -45,3 +46,4 @@ var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), getDemoPlotSiz
 
 plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
 plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, true);
+plot2.setZoomYAxis(false);

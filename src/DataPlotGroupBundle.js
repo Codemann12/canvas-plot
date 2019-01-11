@@ -4619,6 +4619,25 @@
     return linearish(scale);
   }
 
+  function nice(domain, interval) {
+    domain = domain.slice();
+
+    var i0 = 0,
+        i1 = domain.length - 1,
+        x0 = domain[i0],
+        x1 = domain[i1],
+        t;
+
+    if (x1 < x0) {
+      t = i0, i0 = i1, i1 = t;
+      t = x0, x0 = x1, x1 = t;
+    }
+
+    domain[i0] = interval.floor(x0);
+    domain[i1] = interval.ceil(x1);
+    return domain;
+  }
+
   var t0$1 = new Date,
       t1$1 = new Date;
 
@@ -4783,8 +4802,6 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
-  var mondays = monday.range;
-  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4874,8 +4891,6 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
-  var utcMondays = utcMonday.range;
-  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -5584,6 +5599,134 @@
   var parseIso = +new Date("2000-01-01T00:00:00.000Z")
       ? parseIsoNative
       : utcParse(isoSpecifier);
+
+  var durationSecond$1 = 1000,
+      durationMinute$1 = durationSecond$1 * 60,
+      durationHour$1 = durationMinute$1 * 60,
+      durationDay$1 = durationHour$1 * 24,
+      durationWeek$1 = durationDay$1 * 7,
+      durationMonth = durationDay$1 * 30,
+      durationYear = durationDay$1 * 365;
+
+  function date$1(t) {
+    return new Date(t);
+  }
+
+  function number$7(t) {
+    return t instanceof Date ? +t : +new Date(+t);
+  }
+
+  function calendar(year$$1, month$$1, week, day$$1, hour$$1, minute$$1, second$$1, millisecond$$1, format) {
+    var scale = continuous(deinterpolateLinear, interpolateNumber),
+        invert = scale.invert,
+        domain = scale.domain;
+
+    var formatMillisecond = format(".%L"),
+        formatSecond = format(":%S"),
+        formatMinute = format("%I:%M"),
+        formatHour = format("%I %p"),
+        formatDay = format("%a %d"),
+        formatWeek = format("%b %d"),
+        formatMonth = format("%B"),
+        formatYear = format("%Y");
+
+    var tickIntervals = [
+      [second$$1,  1,      durationSecond$1],
+      [second$$1,  5,  5 * durationSecond$1],
+      [second$$1, 15, 15 * durationSecond$1],
+      [second$$1, 30, 30 * durationSecond$1],
+      [minute$$1,  1,      durationMinute$1],
+      [minute$$1,  5,  5 * durationMinute$1],
+      [minute$$1, 15, 15 * durationMinute$1],
+      [minute$$1, 30, 30 * durationMinute$1],
+      [  hour$$1,  1,      durationHour$1  ],
+      [  hour$$1,  3,  3 * durationHour$1  ],
+      [  hour$$1,  6,  6 * durationHour$1  ],
+      [  hour$$1, 12, 12 * durationHour$1  ],
+      [   day$$1,  1,      durationDay$1   ],
+      [   day$$1,  2,  2 * durationDay$1   ],
+      [  week,  1,      durationWeek$1  ],
+      [ month$$1,  1,      durationMonth ],
+      [ month$$1,  3,  3 * durationMonth ],
+      [  year$$1,  1,      durationYear  ]
+    ];
+
+    function tickFormat(date$$1) {
+      return (second$$1(date$$1) < date$$1 ? formatMillisecond
+          : minute$$1(date$$1) < date$$1 ? formatSecond
+          : hour$$1(date$$1) < date$$1 ? formatMinute
+          : day$$1(date$$1) < date$$1 ? formatHour
+          : month$$1(date$$1) < date$$1 ? (week(date$$1) < date$$1 ? formatDay : formatWeek)
+          : year$$1(date$$1) < date$$1 ? formatMonth
+          : formatYear)(date$$1);
+    }
+
+    function tickInterval(interval, start, stop, step) {
+      if (interval == null) interval = 10;
+
+      // If a desired tick count is specified, pick a reasonable tick interval
+      // based on the extent of the domain and a rough estimate of tick size.
+      // Otherwise, assume interval is already a time interval and use it.
+      if (typeof interval === "number") {
+        var target = Math.abs(stop - start) / interval,
+            i = bisector$4(function(i) { return i[2]; }).right(tickIntervals, target);
+        if (i === tickIntervals.length) {
+          step = tickStep$4(start / durationYear, stop / durationYear, interval);
+          interval = year$$1;
+        } else if (i) {
+          i = tickIntervals[target / tickIntervals[i - 1][2] < tickIntervals[i][2] / target ? i - 1 : i];
+          step = i[1];
+          interval = i[0];
+        } else {
+          step = Math.max(tickStep$4(start, stop, interval), 1);
+          interval = millisecond$$1;
+        }
+      }
+
+      return step == null ? interval : interval.every(step);
+    }
+
+    scale.invert = function(y) {
+      return new Date(invert(y));
+    };
+
+    scale.domain = function(_) {
+      return arguments.length ? domain(map$6.call(_, number$7)) : domain().map(date$1);
+    };
+
+    scale.ticks = function(interval, step) {
+      var d = domain(),
+          t0 = d[0],
+          t1 = d[d.length - 1],
+          r = t1 < t0,
+          t;
+      if (r) t = t0, t0 = t1, t1 = t;
+      t = tickInterval(interval, t0, t1, step);
+      t = t ? t.range(t0, t1 + 1) : []; // inclusive stop
+      return r ? t.reverse() : t;
+    };
+
+    scale.tickFormat = function(count, specifier) {
+      return specifier == null ? tickFormat : format(specifier);
+    };
+
+    scale.nice = function(interval, step) {
+      var d = domain();
+      return (interval = tickInterval(interval, d[0], d[d.length - 1], step))
+          ? domain(nice(d, interval))
+          : scale;
+    };
+
+    scale.copy = function() {
+      return copy(scale, calendar(year$$1, month$$1, week, day$$1, hour$$1, minute$$1, second$$1, millisecond$$1, format));
+    };
+
+    return scale;
+  }
+
+  function time() {
+    return calendar(year, month, sunday, day, hour, minute, second, millisecond, timeFormat).domain([new Date(2000, 0, 1), new Date(2000, 0, 2)]);
+  }
 
   function colors(specifier) {
     var n = specifier.length / 6 | 0, colors = new Array(n), i = 0;
@@ -7075,7 +7218,309 @@
       }
   }
 
-  exports.CanvasDataPlot = CanvasDataPlot;
+  class CanvasTimeSeriesPlot {
+      constructor(parentElement, canvasDimensions, config = {}) {
+          config = config || {};
+          this.informationDensity = [];
+          this.plotLineWidth = config.plotLineWidth || 1;
+          this.maxInformationDensity = config.maxInformationDensity || 2.0;
+          this.showMarkerDensity = config.showMarkerDensity || 0.14;
+          CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
+          Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
+      }
+      addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
+          this.informationDensity.push(1);
+          CanvasDataPlot.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
+      }
+      removeDataSet(uniqueID) {
+          var index = CanvasDataPlot.prototype.dataIDs.indexOf(uniqueID);
+          if (index >= 0) {
+              this.informationDensity.splice(index, 1);
+          }
+          CanvasDataPlot.prototype.removeDataSet.call(this, uniqueID);
+      }
+      updateDisplayIndices() {
+          CanvasDataPlot.prototype.updateDisplayIndices.call(this);
+          var nDataSets = CanvasDataPlot.prototype.data.length;
+          for (var i = 0; i < nDataSets; ++i) {
+              var d = CanvasDataPlot.prototype.data[i];
+              if (d.length < 1) {
+                  continue;
+              }
+              var iStart = CanvasDataPlot.prototype.displayIndexStart[i];
+              var iEnd = CanvasDataPlot.prototype.displayIndexEnd[i];
+              var iLength = iEnd - iStart + 1;
+              var scaleLength = Math.max(1, CanvasDataPlot.prototype.xScale(d[iEnd][0]) - CanvasDataPlot.prototype.xScale(d[iStart][0]));
+              this.informationDensity[i] = iLength / scaleLength;
+          }
+      }
+      updateTooltipn() {
+          var mouse$$1 = mouse(CanvasDataPlot.prototype.div.node());
+          var mx = mouse$$1[0] - CanvasDataPlot.prototype.margin.left;
+          var my = mouse$$1[1] - CanvasDataPlot.prototype.margin.top;
+          if (mx <= 0 || mx >= CanvasDataPlot.prototype.width || my <= 0 || my >= CanvasDataPlot.prototype.height) {
+              CanvasDataPlot.prototype.removeTooltip();
+              return;
+          }
+          var nDataSets = CanvasDataPlot.prototype.data.length;
+          var hitMarker = false;
+          TimeSeriesPlot_updateTooltip_graph_loop: for (var i = 0; i < nDataSets; ++i) {
+              if (this.informationDensity[i] > this.showMarkerDensity) {
+                  continue;
+              }
+              var d = CanvasDataPlot.prototype.data[i];
+              var iStart = CanvasDataPlot.prototype.displayIndexStart[i];
+              var iEnd = Math.min(d.length - 1, CanvasDataPlot.prototype.displayIndexEnd[i] + 1);
+              for (var j = iStart; j <= iEnd; ++j) {
+                  var dx = CanvasDataPlot.prototype.xScale(d[j][0]) - mx;
+                  var dy = CanvasDataPlot.prototype.yScale(d[j][1]) - my;
+                  if (dx * dx + dy * dy <= CanvasDataPlot.prototype.tooltipRadiusSquared) {
+                      hitMarker = true;
+                      CanvasDataPlot.prototype.showTooltip([CanvasDataPlot.prototype.xScale(d[j][0]),
+                          CanvasDataPlot.prototype.yScale(d[j][1])], CanvasDataPlot.prototype.dataColors[i], CanvasDataPlot.prototype.getTooltipStringX(d[j]), CanvasDataPlot.prototype.getTooltipStringY(d[j]));
+                      break TimeSeriesPlot_updateTooltip_graph_loop;
+                  }
+              }
+          }
+          if (!hitMarker) {
+              CanvasDataPlot.prototype.removeTooltip();
+          }
+      }
+      getTooltipStringX(dataPoint) {
+          var zeroPad2 = function (n) {
+              return n < 10 ? ("0" + n) : n.toString();
+          };
+          var date$$1 = dataPoint[0];
+          var Y = date$$1.getUTCFullYear();
+          var M = zeroPad2(date$$1.getUTCMonth());
+          var D = zeroPad2(date$$1.getUTCDay());
+          var h = zeroPad2(date$$1.getUTCHours());
+          var m = zeroPad2(date$$1.getUTCMinutes());
+          var s = zeroPad2(date$$1.getUTCSeconds());
+          return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
+      }
+      setupXScaleAndAxis() {
+          CanvasDataPlot.prototype.xScale = time()
+              .domain(CanvasDataPlot.prototype.calculateXDomain())
+              .range([0, CanvasDataPlot.prototype.width])
+              .nice();
+          var formatMilliSecond = timeFormat(".%L"), formatSecond = timeFormat(":%S"), formatHour = timeFormat("%I:%p"), formatWeek = timeFormat("%b %d"), formatMonth = timeFormat("%B"), formatYear = timeFormat("%Y");
+          let multiFormat = (date$$1) => {
+              return (second(date$$1) < date$$1 ? formatMilliSecond
+                  : minute(date$$1) < date$$1 ? formatSecond
+                      : day(date$$1) < date$$1 ? formatHour
+                          : sunday(date$$1) < date$$1 ? formatWeek
+                              : year(date$$1) < date$$1 ? formatMonth
+                                  : formatYear)(date$$1);
+          };
+          CanvasDataPlot.prototype.xAxis = axisBottom(CanvasDataPlot.prototype.xScale)
+              .tickFormat(multiFormat)
+              .ticks(Math.round(CanvasDataPlot.prototype.xTicksPerPixel * CanvasDataPlot.prototype.width));
+      }
+      drawDataSet(dataIndex) {
+          var d = CanvasDataPlot.prototype.data[dataIndex];
+          if (d.length < 1) {
+              return;
+          }
+          var iStart = CanvasDataPlot.prototype.displayIndexStart[dataIndex];
+          var iEnd = CanvasDataPlot.prototype.displayIndexEnd[dataIndex];
+          var informationDensity = this.informationDensity[dataIndex];
+          var drawEvery = 1;
+          if (informationDensity > this.maxInformationDensity) {
+              drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
+          }
+          // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
+          iStart = Math.max(0, iStart - iStart % drawEvery);
+          CanvasDataPlot.prototype.canvas.beginPath();
+          CanvasDataPlot.prototype.canvas.moveTo(CanvasDataPlot.prototype.xScale(d[iStart][0]), CanvasDataPlot.prototype.yScale(d[iStart][1]));
+          for (var i = iStart; i <= iEnd; i = i + drawEvery) {
+              CanvasDataPlot.prototype.canvas.lineTo(CanvasDataPlot.prototype.xScale(d[i][0]), CanvasDataPlot.prototype.yScale(d[i][1]));
+          }
+          var iLast = Math.min(d.length - 1, iEnd + drawEvery);
+          CanvasDataPlot.prototype.canvas.lineTo(CanvasDataPlot.prototype.xScale(d[iLast][0]), CanvasDataPlot.prototype.yScale(d[iLast][1]));
+          CanvasDataPlot.prototype.canvas.lineWidth = this.plotLineWidth;
+          CanvasDataPlot.prototype.canvas.strokeStyle = CanvasDataPlot.prototype.dataColors[dataIndex];
+          CanvasDataPlot.prototype.canvas.stroke();
+          if (informationDensity <= this.showMarkerDensity) {
+              CanvasDataPlot.prototype.canvas.lineWidth = CanvasDataPlot.prototype.markerLineWidth;
+              for (var i = iStart; i <= iLast; ++i) {
+                  CanvasDataPlot.prototype.canvas.beginPath();
+                  CanvasDataPlot.prototype.canvas.arc(CanvasDataPlot.prototype.xScale(d[i][0]), CanvasDataPlot.prototype.yScale(d[i][1]), CanvasDataPlot.prototype.markerRadius, 0, 2 * Math.PI);
+                  CanvasDataPlot.prototype.canvas.stroke();
+              }
+          }
+      }
+  }
+
+  class CanvasVectorSeriesPlot {
+      constructor(parentElement, canvasDimensions, config = {}) {
+          this.vectorScale = config.vectorScale || 2.0e5;
+          this.scaleUnits = config.scaleUnits || "units";
+          this.scaleLength = config.scaleLength || 75;
+          this.scaleTextElem = null;
+          var configCopy = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(config);
+          //configCopy["showTooltips"] = false;
+          if (!("invertYAxis" in configCopy)) {
+              configCopy["invertYAxis"] = true;
+          }
+          CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
+      }
+  }
+
+  class CanvasDataPlotGroup {
+      constructor(parentElement, plotDimensions, multiplePlots, syncPlots, defaultConfig = {}) {
+          this.defaultConfig = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(defaultConfig);
+          this.container = parentElement;
+          CanvasDataPlot.prototype.width = plotDimensions[0];
+          CanvasDataPlot.prototype.height = plotDimensions[1];
+          this.plots = [];
+          this.firstPlotType = "";
+          this.multiplePlots = multiplePlots;
+          this.syncPlots = syncPlots;
+          this.syncTranslateX = true;
+          this.syncTranslateY = false;
+          this.lastZoomedPlot = null;
+          this.zoomXAxis = true;
+          this.zoomYAxis = true;
+          this.defaultConfig["updateViewCallback"] = (this.multiplePlots ? (this.setViews).bind(this) : null);
+      }
+      addDataSet(plotType, uniqueID, displayName, dataSet, color, plotConfig) {
+          if (this.multiplePlots || this.plots.length < 1) {
+              var config = null;
+              if (plotConfig) {
+                  config = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(plotConfig);
+                  CanvasDataPlot.prototype.CanvasPlot_appendToObject(config, this.defaultConfig);
+              }
+              else {
+                  config = this.defaultConfig;
+              }
+              if (plotConfig && this.multiplePlots) {
+                  config["updateViewCallback"] = (this.setViews).bind(this);
+              }
+              var p = this.createPlot(plotType, config);
+              p.addDataSet(uniqueID, displayName, dataSet, color, false);
+              p.setZoomXAxis(this.zoomXAxis);
+              p.setZoomYAxis(this.zoomYAxis);
+              this.plots.push(p);
+              this.firstPlotType = plotType;
+              this.fitDataInViews();
+          }
+          else if (plotType === this.firstPlotType) {
+              this.plots[0].addDataSet(uniqueID, displayName, dataSet, color, true);
+          }
+      }
+      removeDataSet(uniqueID) {
+          if (this.multiplePlots) {
+              var nPlots = this.plots.length;
+              for (var i = 0; i < nPlots; ++i) {
+                  if (this.plots[i].getDataID(0) === uniqueID) {
+                      if (this.lastZoomedPlot === this.plots[i]) {
+                          this.lastZoomedPlot = null;
+                      }
+                      this.plots[i].destroy();
+                      this.plots.splice(i, 1);
+                      break;
+                  }
+              }
+          }
+          else if (this.plots.length > 0) {
+              this.plots[0].removeDataSet(uniqueID);
+          }
+      }
+      setSyncViews(sync, translateX, translateY) {
+          this.syncPlots = sync;
+          this.syncTranslateX = translateX;
+          this.syncTranslateY = translateY;
+          if (sync) {
+              if (this.lastZoomedPlot) {
+                  var xDomain = this.lastZoomedPlot.getXDomain();
+                  var yDomain = this.lastZoomedPlot.getYDomain();
+                  this.plots.forEach((function (p) {
+                      if (p != this.lastZoomedPlot) {
+                          p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
+                      }
+                  }).bind(this));
+              }
+              else {
+                  this.fitDataInViews();
+              }
+          }
+      }
+      setZoomXAxis(zoomX) {
+          this.zoomXAxis = zoomX;
+          this.plots.forEach(function (p) {
+              p.setZoomXAxis(zoomX);
+          });
+      }
+      setZoomYAxis(zoomY) {
+          this.zoomYAxis = zoomY;
+          this.plots.forEach(function (p) {
+              p.setZoomYAxis(zoomY);
+          });
+      }
+      fitDataInViews() {
+          if (this.plots.length < 1) {
+              return;
+          }
+          var xDomain = this.plots[0].calculateXDomain();
+          var yDomain = this.plots[0].calculateYDomain();
+          for (var i = 1; i < this.plots.length; ++i) {
+              var xDomainCandidate = this.plots[i].calculateXDomain();
+              var yDomainCandidate = this.plots[i].calculateYDomain();
+              if (xDomainCandidate[0] < xDomain[0]) {
+                  xDomain[0] = xDomainCandidate[0];
+              }
+              if (xDomainCandidate[1] > xDomain[1]) {
+                  xDomain[1] = xDomainCandidate[1];
+              }
+              if (yDomainCandidate[0] < yDomain[0]) {
+                  yDomain[0] = yDomainCandidate[0];
+              }
+              if (yDomainCandidate[1] > yDomain[1]) {
+                  yDomain[1] = yDomainCandidate[1];
+              }
+          }
+          this.plots.forEach(function (p) {
+              p.updateDomains(xDomain, yDomain, true);
+          });
+      }
+      resizePlots(dimensions) {
+          CanvasDataPlot.prototype.width = dimensions[0];
+          CanvasDataPlot.prototype.height = dimensions[1];
+          this.plots.forEach(function (p) {
+              p.resize(dimensions);
+          });
+      }
+      destroy() {
+          this.plots.forEach(function (p) {
+              p.destroy();
+          });
+          this.lastZoomedPlot = null;
+          this.plots = [];
+      }
+      createPlot(plotType, plotConfig) {
+          if (plotType === "CanvasTimeSeriesPlot") {
+              return new CanvasTimeSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
+          }
+          if (plotType === "CanvasVectorSeriesPlot") {
+              return new CanvasVectorSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
+          }
+          return new CanvasDataPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
+      }
+      setViews(except, xDomain, yDomain) {
+          this.lastZoomedPlot = except;
+          if (!this.syncPlots) {
+              return;
+          }
+          this.plots.forEach((function (p) {
+              if (p != except) {
+                  p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
+              }
+          }).bind(this));
+      }
+  }
+
+  exports.CanvasDataPlotGroup = CanvasDataPlotGroup;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
