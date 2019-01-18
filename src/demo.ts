@@ -7,7 +7,7 @@ import{CanvasDataPlotGroup} from './CanvasDataPlotGroup';
 //const $ = require('jquery');
 
 
-// Does not habe any use but i love to have it there
+// Does not have any use but i love to have it there
 class Demo{
     constructor(){
     }   
