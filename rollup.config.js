@@ -5,7 +5,7 @@ export default {
     input: "src/CanvasTimeSeriesPlot.js",
     input: 'src/CanvasVectorSeriesPlot.js',
     input: 'src/CanvasDataPlotGroup.js',
-   input: 'src/demo.js',
+    input: 'src/demo.js',
     
     output:{ 
         file:'src/DataPlotBundle.js',

@@ -1,4 +1,3 @@
-import * as d3 from 'd3';
 import { CanvasTimeSeriesPlot } from './CanvasTimeSeriesPlot';
 import { CanvasDataPlot } from './CanvasDataPlot';
 export declare class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {

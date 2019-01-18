@@ -17,7 +17,7 @@ export class CanvasDataPlot{
 	xAxisLabelText: string;
 	yAxisLabelText: string;
 	updateViewCallback: undefined; //check the type later 
-	
+	 
 	disableLegend: boolean;
 	invertYAxis: boolean;
 	gridColor: string;

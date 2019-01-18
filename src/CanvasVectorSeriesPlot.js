@@ -23,7 +23,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
     }
     getMagnitudeScale() {
         var xDomain = this.getXDomain();
-        return this.vectorScale * this.width / (xDomain[1] - xDomain[0]);
+        return this.vectorScale * this.width / (xDomain[1].getTime() - xDomain[0].getTime());
     }
     //Due to the  wrong reference this can throw exception
     drawCanvas() {
@@ -52,7 +52,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
         for (var i = iStart; i <= iEnd; i = i + drawEvery) {
             var startX = this.xScale(d[i][0]);
             var startY = this.yScale(d[i][1]);
-            var dir = -1.0 * d[i][1] + 0.5 * Math.PI; // second index of d change to 1
+            var dir = -1.0 * d[i][1] + 0.5 * Math.PI; // second index of d change to 1: get the data instead of the date 
             var mag = magScale * d[i][1];
             var cosDir = Math.cos(dir);
             var sinDir = Math.sin(dir);

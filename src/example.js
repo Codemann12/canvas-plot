@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsv(delimiter) {
+  function dsvFormat(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,19 +3479,9 @@
     };
   }
 
-  var csv = dsv(",");
+  var csv = dsvFormat(",");
 
-  var csvParse = csv.parse;
-  var csvParseRows = csv.parseRows;
-  var csvFormat = csv.format;
-  var csvFormatRows = csv.formatRows;
-
-  var tsv = dsv("\t");
-
-  var tsvParse = tsv.parse;
-  var tsvParseRows = tsv.parseRows;
-  var tsvFormat = tsv.format;
-  var tsvFormatRows = tsv.formatRows;
+  var tsv = dsvFormat("\t");
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -6810,12 +6800,8 @@
           }
           this.xAxisZoom = true;
           this.yAxisZoom = true;
-          /*this.resetZoomListenerAxes();
-          setupXScaleAndAxis(): void{};
-          setupYScaleAndAxis(): void{};
-          drawCanvas(): void {};
-          
-          */
+          this.drawCanvas();
+          this.resetZoomListenerAxes();
       }
       // to be implement later
       zoomFunction() { }
@@ -6950,7 +6936,8 @@
               }
           });
           if (nonEmptySets.length < 1) {
-              return [0, 1];
+              //return [0, 1]; 
+              return [];
           }
           var min$$1 = nonEmptySets[0][0][0];
           var max$$1 = nonEmptySets[0][nonEmptySets[0].length - 1][0];
@@ -6960,9 +6947,10 @@
               min$$1 = minCandidate < min$$1 ? minCandidate : min$$1;
               max$$1 = max$$1 < maxCandidate ? maxCandidate : max$$1;
           }
-          if (max$$1 - min$$1 <= 0) {
-              min$$1 = 1 * max$$1; //NOTE: 1* is neceseccary to handle Dates in derived classes.
-              max$$1 = min$$1 + 1;
+          // check this block during test phase
+          if (max$$1.getTime() - min$$1.getTime() <= 0) {
+              min$$1.setTime((1000 * 60 * 60 * 24) * max$$1.getTime()); //NOTE: 1* is neceseccary to handle Dates in derived classes.
+              max$$1.setTime(min$$1.getTime() + (1000 * 60 * 60 * 24));
           }
           return [min$$1, max$$1];
       }
@@ -7228,8 +7216,9 @@
       }
   }
 
-  class CanvasTimeSeriesPlot {
+  class CanvasTimeSeriesPlot extends CanvasDataPlot {
       constructor(parentElement, canvasDimensions, config = {}) {
+          super(parentElement, canvasDimensions, config);
           config = config || {};
           this.informationDensity = [];
           this.plotLineWidth = config.plotLineWidth || 1;
@@ -7362,39 +7351,43 @@
       }
   }
 
-  console.log("test");
-  function getDemoPlotSize() {
-      return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
+  function randomDate() {
+      return new Date(new Date(2012, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2012, 0, 1).getTime()));
   }
-  let data1 = [[-1, 5], [0.5, 6], [5, -2.5], [6, 1], [10, 9], [20, -55]];
-  var html$1 = select("div").append("p");
-  console.log(html$1);
-  var plot1 = new CanvasDataPlot(html$1, [1000, 900], {
-      xAxisLabel: "IQ",
-      yAxisLabel: "Test Score",
-      markerLineWidth: 3,
-      markerRadius: 5
+  $(document).ready(function () {
+      var data1 = [[this.randomDate(), Math.floor(Math.random() * 100)],
+          [this.randomDate(), Math.floor(Math.random() * 100)],
+          [this.randomDate(), Math.floor(Math.random() * 100)],
+          [this.randomDate(), Math.floor(Math.random() * 100)],
+          [this.randomDate(), Math.floor(Math.random() * 100)],
+          [this.randomDate(), Math.floor(Math.random() * 100)]];
+      var plot1 = new CanvasDataPlot(select("#maincontainer"), [1000, 900], {
+          xAxisLabel: "IQ",
+          yAxisLabel: "Test Score",
+          markerLineWidth: 3,
+          markerRadius: 5
+      });
+      plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
+      plot1.addDataPoint("ds1", [randomDate(), 0]);
+      plot1.addDataPoint("ds1", [this.randomDate(), 10]);
+      plot1.addDataPoint("ds1", [this.randomDate(), 0]);
+      plot1.updateDomains([this.randomDate(), this.randomDate()], [-60, 15], true);
+      // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
+      var ts1 = [];
+      var ts2 = [];
+      var now$$1 = new Date();
+      for (var i = 0; i < 100; ++i) {
+          var time$$1 = new Date(now$$1);
+          time$$1.setHours(i);
+          ts1.push([time$$1, Math.random()]);
+          ts2.push([time$$1, Math.random()]);
+      }
+      var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), this.getDemoPlotSize(), {
+          yAxisLabel: "Voltage [V]"
+      });
+      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
+      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, true);
+      plot2.setZoomYAxis(false);
   });
-  plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
-  plot1.addDataPoint("ds1", [15, 0]); // Will not be added! (x values have to be in ascending order)
-  plot1.addDataPoint("ds1", [20, 10]); // Will be added.
-  plot1.addDataPoint("ds1", [21, 0]);
-  plot1.updateDomains([-2, 22], [-60, 15], true);
-  // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
-  console.log(data1);
-  var ts1 = [];
-  var ts2 = [];
-  var now$1 = new Date();
-  for (var i = 0; i < 100; ++i) {
-      var time$1 = new Date(now$1);
-      time$1.setHours(i);
-      ts1.push([time$1, Math.random()]);
-      ts2.push([time$1, Math.random()]);
-  }
-  var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
-      yAxisLabel: "Voltage [V]"
-  });
-  plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
-  plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, true);
 
 })));

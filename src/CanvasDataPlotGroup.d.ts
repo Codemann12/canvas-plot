@@ -1,4 +1,3 @@
-import * as d3 from 'd3';
 import { CanvasDataPlot } from './CanvasDataPlot';
 export declare class CanvasDataPlotGroup {
     defaultConfig: CanvasDataPlotGroup.defaultConfig;
