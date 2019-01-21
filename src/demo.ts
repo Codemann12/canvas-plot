@@ -1,5 +1,4 @@
 import * as d3 from 'd3';
-
 import {CanvasDataPlot} from './CanvasDataPlot';
 import{CanvasTimeSeriesPlot} from './CanvasTimeSeriesPlot';
 import{CanvasVectorSeriesPlot} from './CanvasVectorSeriesPlot';
@@ -18,17 +17,17 @@ function getDemoPlotSize() {
 	return [window.innerWidth-100, Math.round(0.45*(window.innerWidth-100))];
 }
 
-function randomDate() {
+function randomDate(): Date {
     return new Date(new Date(2012, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2012, 0, 1).getTime()));
 }
 
-$( document).ready( function(){
-        var data1: Array<[Date, number]> = [[this.randomDate(),Math.floor(Math.random() * 100)],
-        [this.randomDate(),Math.floor(Math.random() * 100)],
-        [this.randomDate(),Math.floor(Math.random() * 100)],
-        [this.randomDate(),Math.floor(Math.random() * 100)],
-        [this.randomDate(),Math.floor(Math.random() * 100)],
-        [this.randomDate(),Math.floor(Math.random() * 100)]];
+$(document).ready( function(){
+        var data1: Array<[Date, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
+        [randomDate(),Math.floor(Math.random() * 100)],
+        [randomDate(),Math.floor(Math.random() * 100)],
+        [randomDate(),Math.floor(Math.random() * 100)],
+        [randomDate(),Math.floor(Math.random() * 100)],
+        [randomDate(),Math.floor(Math.random() * 100)]];
     
         var plot1 = new CanvasDataPlot(d3.select("#maincontainer"), [1000, 900], {
 		xAxisLabel: "IQ",
@@ -40,9 +39,9 @@ $( document).ready( function(){
 
     plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);   
     plot1.addDataPoint("ds1", [randomDate(),0]);   
-    plot1.addDataPoint("ds1", [this.randomDate(),10]);
-    plot1.addDataPoint("ds1", [this.randomDate(),0]);
-    plot1.updateDomains([this.randomDate(), this.randomDate()], [-60,15], true);
+    plot1.addDataPoint("ds1", [randomDate(),10]);
+    plot1.addDataPoint("ds1", [randomDate(),0]);
+    plot1.updateDomains([randomDate(), randomDate()], [-60,15], true);
 // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
 
 
@@ -58,7 +57,7 @@ for(var i=0; i<100; ++i) {
 }
 
 
-var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), this.getDemoPlotSize(), {
+var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), getDemoPlotSize(), {
     yAxisLabel: "Voltage [V]"
 });
 

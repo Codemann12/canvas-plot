@@ -57,6 +57,8 @@ export class CanvasDataPlot {
         this.yScale = null;
         this.xAxis = null;
         this.yAxis = null;
+        this.setupXScaleAndAxis();
+        this.setupYScaleAndAxis();
         // axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
         this.yAxisGroup = this.svgTranslateGroup.append("g")
             .attr("class", "y cvpAxis")

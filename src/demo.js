@@ -16,12 +16,12 @@ function randomDate() {
     return new Date(new Date(2012, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2012, 0, 1).getTime()));
 }
 $(document).ready(function () {
-    var data1 = [[this.randomDate(), Math.floor(Math.random() * 100)],
-        [this.randomDate(), Math.floor(Math.random() * 100)],
-        [this.randomDate(), Math.floor(Math.random() * 100)],
-        [this.randomDate(), Math.floor(Math.random() * 100)],
-        [this.randomDate(), Math.floor(Math.random() * 100)],
-        [this.randomDate(), Math.floor(Math.random() * 100)]];
+    var data1 = [[randomDate(), Math.floor(Math.random() * 100)],
+        [randomDate(), Math.floor(Math.random() * 100)],
+        [randomDate(), Math.floor(Math.random() * 100)],
+        [randomDate(), Math.floor(Math.random() * 100)],
+        [randomDate(), Math.floor(Math.random() * 100)],
+        [randomDate(), Math.floor(Math.random() * 100)]];
     var plot1 = new CanvasDataPlot(d3.select("#maincontainer"), [1000, 900], {
         xAxisLabel: "IQ",
         yAxisLabel: "Test Score",
@@ -30,9 +30,9 @@ $(document).ready(function () {
     });
     plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
     plot1.addDataPoint("ds1", [randomDate(), 0]);
-    plot1.addDataPoint("ds1", [this.randomDate(), 10]);
-    plot1.addDataPoint("ds1", [this.randomDate(), 0]);
-    plot1.updateDomains([this.randomDate(), this.randomDate()], [-60, 15], true);
+    plot1.addDataPoint("ds1", [randomDate(), 10]);
+    plot1.addDataPoint("ds1", [randomDate(), 0]);
+    plot1.updateDomains([randomDate(), randomDate()], [-60, 15], true);
     // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
     var ts1 = [];
     var ts2 = [];
@@ -43,7 +43,7 @@ $(document).ready(function () {
         ts1.push([time, Math.random()]);
         ts2.push([time, Math.random()]);
     }
-    var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), this.getDemoPlotSize(), {
+    var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), getDemoPlotSize(), {
         yAxisLabel: "Voltage [V]"
     });
     plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);

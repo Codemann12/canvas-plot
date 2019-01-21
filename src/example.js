@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsv(delimiter) {
+  function dsvFormat(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,19 +3479,9 @@
     };
   }
 
-  var csv = dsv(",");
+  var csv = dsvFormat(",");
 
-  var csvParse = csv.parse;
-  var csvParseRows = csv.parseRows;
-  var csvFormat = csv.format;
-  var csvFormatRows = csv.formatRows;
-
-  var tsv = dsv("\t");
-
-  var tsvParse = tsv.parse;
-  var tsvParseRows = tsv.parseRows;
-  var tsvFormat = tsv.format;
-  var tsvFormatRows = tsv.formatRows;
+  var tsv = dsvFormat("\t");
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -4812,8 +4802,6 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
-  var mondays = monday.range;
-  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4903,8 +4891,6 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
-  var utcMondays = utcMonday.range;
-  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -6778,6 +6764,8 @@
           this.yScale = null;
           this.xAxis = null;
           this.yAxis = null;
+          this.setupXScaleAndAxis();
+          this.setupYScaleAndAxis();
           // axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
           this.yAxisGroup = this.svgTranslateGroup.append("g")
               .attr("class", "y cvpAxis")
@@ -7637,12 +7625,12 @@
       return new Date(new Date(2012, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2012, 0, 1).getTime()));
   }
   $(document).ready(function () {
-      var data1 = [[this.randomDate(), Math.floor(Math.random() * 100)],
-          [this.randomDate(), Math.floor(Math.random() * 100)],
-          [this.randomDate(), Math.floor(Math.random() * 100)],
-          [this.randomDate(), Math.floor(Math.random() * 100)],
-          [this.randomDate(), Math.floor(Math.random() * 100)],
-          [this.randomDate(), Math.floor(Math.random() * 100)]];
+      var data1 = [[randomDate(), Math.floor(Math.random() * 100)],
+          [randomDate(), Math.floor(Math.random() * 100)],
+          [randomDate(), Math.floor(Math.random() * 100)],
+          [randomDate(), Math.floor(Math.random() * 100)],
+          [randomDate(), Math.floor(Math.random() * 100)],
+          [randomDate(), Math.floor(Math.random() * 100)]];
       var plot1 = new CanvasDataPlot(select("#maincontainer"), [1000, 900], {
           xAxisLabel: "IQ",
           yAxisLabel: "Test Score",
@@ -7651,9 +7639,9 @@
       });
       plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
       plot1.addDataPoint("ds1", [randomDate(), 0]);
-      plot1.addDataPoint("ds1", [this.randomDate(), 10]);
-      plot1.addDataPoint("ds1", [this.randomDate(), 0]);
-      plot1.updateDomains([this.randomDate(), this.randomDate()], [-60, 15], true);
+      plot1.addDataPoint("ds1", [randomDate(), 10]);
+      plot1.addDataPoint("ds1", [randomDate(), 0]);
+      plot1.updateDomains([randomDate(), randomDate()], [-60, 15], true);
       // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
       var ts1 = [];
       var ts2 = [];
@@ -7664,7 +7652,7 @@
           ts1.push([time$$1, Math.random()]);
           ts2.push([time$$1, Math.random()]);
       }
-      var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), this.getDemoPlotSize(), {
+      var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
           yAxisLabel: "Voltage [V]"
       });
       plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
