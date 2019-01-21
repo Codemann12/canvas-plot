@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsvFormat(delimiter) {
+  function dsv(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,9 +3479,19 @@
     };
   }
 
-  var csv = dsvFormat(",");
+  var csv = dsv(",");
 
-  var tsv = dsvFormat("\t");
+  var csvParse = csv.parse;
+  var csvParseRows = csv.parseRows;
+  var csvFormat = csv.format;
+  var csvFormatRows = csv.formatRows;
+
+  var tsv = dsv("\t");
+
+  var tsvParse = tsv.parse;
+  var tsvParseRows = tsv.parseRows;
+  var tsvFormat = tsv.format;
+  var tsvFormatRows = tsv.formatRows;
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -4802,6 +4812,8 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
+  var mondays = monday.range;
+  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4891,6 +4903,8 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
+  var utcMondays = utcMonday.range;
+  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -7225,11 +7239,11 @@
           this.maxInformationDensity = config.maxInformationDensity || 2.0;
           this.showMarkerDensity = config.showMarkerDensity || 0.14;
           CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
-          Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
+          // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
       }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
           this.informationDensity.push(1);
-          CanvasDataPlot.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
+          this.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
       }
       removeDataSet(uniqueID) {
           var index = CanvasDataPlot.prototype.dataIDs.indexOf(uniqueID);
@@ -7351,6 +7365,274 @@
       }
   }
 
+  class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
+      constructor(parentElement, canvasDimensions, config = {}) {
+          super(parentElement, canvasDimensions, config);
+          this.vectorScale = config.vectorScale || 2.0e5;
+          this.scaleUnits = config.scaleUnits || "units";
+          this.scaleLength = config.scaleLength || 75;
+          this.scaleTextElem = null;
+          var configCopy = this.CanvasPlot_shallowObjectCopy(config);
+          //configCopy["showTooltips"] = false;
+          if (!("invertYAxis" in configCopy)) {
+              configCopy["invertYAxis"] = true;
+          }
+          CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
+          Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+      }
+      // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
+      getTooltipStringY(dataPoint) {
+          var roundConst = 100;
+          var dir = Math.round(roundConst * 180 / Math.PI * (dataPoint[1] % (2 * Math.PI))) / roundConst;
+          var mag = Math.round(roundConst * dataPoint[1]) / roundConst;
+          return "y = " + dataPoint[1] + "; dir = " + dir + "; mag = " + mag;
+      }
+      getMagnitudeScale() {
+          var xDomain = this.getXDomain();
+          return this.vectorScale * this.width / (xDomain[1].getTime() - xDomain[0].getTime());
+      }
+      //Due to the  wrong reference this can throw exception
+      drawCanvas() {
+          this.updateScaleText();
+          this.drawCanvas.call(this);
+      }
+      drawDataSet(dataIndex) {
+          var d = this.data[dataIndex];
+          if (d.length < 1) {
+              return;
+          }
+          var iStart = this.displayIndexStart[dataIndex];
+          var iEnd = this.displayIndexEnd[dataIndex];
+          var informationDensity = this.informationDensity[dataIndex];
+          var drawEvery = 1;
+          if (informationDensity > this.maxInformationDensity) {
+              drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
+          }
+          // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
+          iStart = Math.max(0, iStart - drawEvery - iStart % drawEvery);
+          iEnd = Math.min(d.length - 1, iEnd + drawEvery);
+          this.canvas.lineWidth = this.plotLineWidth;
+          this.canvas.strokeStyle = this.dataColors[dataIndex];
+          var magScale = this.getMagnitudeScale();
+          var tipSize = 10 * magScale;
+          for (var i = iStart; i <= iEnd; i = i + drawEvery) {
+              var startX = this.xScale(d[i][0]);
+              var startY = this.yScale(d[i][1]);
+              var dir = -1.0 * d[i][1] + 0.5 * Math.PI; // second index of d change to 1: get the data instead of the date 
+              var mag = magScale * d[i][1];
+              var cosDir = Math.cos(dir);
+              var sinDir = Math.sin(dir);
+              var endX = startX + mag * cosDir;
+              var endY = startY - mag * sinDir;
+              //var tipAngle = 0.1*Math.PI;
+              this.canvas.beginPath();
+              this.canvas.moveTo(startX, startY);
+              this.canvas.lineTo(endX, endY);
+              this.canvas.stroke();
+              this.canvas.beginPath();
+              this.canvas.moveTo(startX + (mag - tipSize) * cosDir - 0.5 * tipSize * sinDir, startY - ((mag - tipSize) * sinDir + 0.5 * tipSize * cosDir));
+              this.canvas.lineTo(endX, endY);
+              this.canvas.lineTo(startX + (mag - tipSize) * cosDir + 0.5 * tipSize * sinDir, startY - ((mag - tipSize) * sinDir - 0.5 * tipSize * cosDir));
+              this.canvas.stroke();
+          }
+      }
+      updateScaleText() {
+          if (this.disableLegend || !this.scaleTextElem) {
+              return;
+          }
+          var newLabel = (this.scaleLength / this.getMagnitudeScale()).toFixed(1) + this.scaleUnits;
+          this.scaleTextElem.text(newLabel);
+          var newLength = this.scaleTextElem.node().getComputedTextLength() + this.scaleLength + 3 * this.legendXPadding;
+          var lengthDiff = this.legendWidth - newLength;
+          if (lengthDiff < 0) {
+              this.legendWidth -= lengthDiff;
+              this.legendBG.attr("width", this.legendWidth);
+              this.legend
+                  .attr("transform", "translate(" + (this.width - this.legendWidth -
+                  this.legendMargin) + ", " + this.legendMargin + ")");
+          }
+      }
+      updateLegend() {
+          if (this.disableLegend) {
+              return;
+          }
+          this.updateLegend.call(this);
+          if (!this.legend) {
+              return;
+          }
+          var oldHeight = parseInt(this.legendBG.attr("height"));
+          var newHeight = oldHeight + this.legendYPadding + this.legendLineHeight;
+          this.legendBG.attr("height", newHeight);
+          this.legend.append("rect")
+              .attr("x", this.legendXPadding)
+              .attr("y", newHeight - Math.floor((this.legendYPadding + 0.5 * this.legendLineHeight)) + 1)
+              .attr("width", this.scaleLength)
+              .attr("height", 2)
+              .attr("fill", "black")
+              .attr("stroke", "none");
+          this.scaleTextElem = this.legend.append("text")
+              .attr("x", 2 * this.legendXPadding + this.scaleLength)
+              .attr("y", newHeight - this.legendYPadding);
+          this.updateScaleText();
+      }
+  }
+
+  class CanvasDataPlotGroup {
+      constructor(parentElement, plotDimensions, multiplePlots, syncPlots, defaultConfig = {}) {
+          this.defaultConfig = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(defaultConfig);
+          this.container = parentElement;
+          CanvasDataPlot.prototype.width = plotDimensions[0];
+          CanvasDataPlot.prototype.height = plotDimensions[1];
+          this.plots = [];
+          this.firstPlotType = "";
+          this.multiplePlots = multiplePlots;
+          this.syncPlots = syncPlots;
+          this.syncTranslateX = true;
+          this.syncTranslateY = false;
+          this.lastZoomedPlot = null;
+          this.zoomXAxis = true;
+          this.zoomYAxis = true;
+          this.defaultConfig["updateViewCallback"] = (this.multiplePlots ? (this.setViews).bind(this) : null);
+      }
+      addDataSet(plotType, uniqueID, displayName, dataSet, color, plotConfig) {
+          if (this.multiplePlots || this.plots.length < 1) {
+              var config = null;
+              if (plotConfig) {
+                  config = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(plotConfig);
+                  CanvasDataPlot.prototype.CanvasPlot_appendToObject(config, this.defaultConfig);
+              }
+              else {
+                  config = this.defaultConfig;
+              }
+              if (plotConfig && this.multiplePlots) {
+                  config["updateViewCallback"] = (this.setViews).bind(this);
+              }
+              var p = this.createPlot(plotType, config);
+              p.addDataSet(uniqueID, displayName, dataSet, color, false);
+              p.setZoomXAxis(this.zoomXAxis);
+              p.setZoomYAxis(this.zoomYAxis);
+              this.plots.push(p);
+              this.firstPlotType = plotType;
+              this.fitDataInViews();
+          }
+          else if (plotType === this.firstPlotType) {
+              this.plots[0].addDataSet(uniqueID, displayName, dataSet, color, true);
+          }
+      }
+      removeDataSet(uniqueID) {
+          if (this.multiplePlots) {
+              var nPlots = this.plots.length;
+              for (var i = 0; i < nPlots; ++i) {
+                  if (this.plots[i].getDataID(0) === uniqueID) {
+                      if (this.lastZoomedPlot === this.plots[i]) {
+                          this.lastZoomedPlot = null;
+                      }
+                      this.plots[i].destroy();
+                      this.plots.splice(i, 1);
+                      break;
+                  }
+              }
+          }
+          else if (this.plots.length > 0) {
+              this.plots[0].removeDataSet(uniqueID);
+          }
+      }
+      setSyncViews(sync, translateX, translateY) {
+          this.syncPlots = sync;
+          this.syncTranslateX = translateX;
+          this.syncTranslateY = translateY;
+          if (sync) {
+              if (this.lastZoomedPlot) {
+                  var xDomain = this.lastZoomedPlot.getXDomain();
+                  var yDomain = this.lastZoomedPlot.getYDomain();
+                  this.plots.forEach((function (p) {
+                      if (p != this.lastZoomedPlot) {
+                          p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
+                      }
+                  }).bind(this));
+              }
+              else {
+                  this.fitDataInViews();
+              }
+          }
+      }
+      setZoomXAxis(zoomX) {
+          this.zoomXAxis = zoomX;
+          this.plots.forEach(function (p) {
+              p.setZoomXAxis(zoomX);
+          });
+      }
+      setZoomYAxis(zoomY) {
+          this.zoomYAxis = zoomY;
+          this.plots.forEach(function (p) {
+              p.setZoomYAxis(zoomY);
+          });
+      }
+      fitDataInViews() {
+          if (this.plots.length < 1) {
+              return;
+          }
+          var xDomain = this.plots[0].calculateXDomain();
+          var yDomain = this.plots[0].calculateYDomain();
+          for (var i = 1; i < this.plots.length; ++i) {
+              var xDomainCandidate = this.plots[i].calculateXDomain();
+              var yDomainCandidate = this.plots[i].calculateYDomain();
+              if (xDomainCandidate[0] < xDomain[0]) {
+                  xDomain[0] = xDomainCandidate[0];
+              }
+              if (xDomainCandidate[1] > xDomain[1]) {
+                  xDomain[1] = xDomainCandidate[1];
+              }
+              if (yDomainCandidate[0] < yDomain[0]) {
+                  yDomain[0] = yDomainCandidate[0];
+              }
+              if (yDomainCandidate[1] > yDomain[1]) {
+                  yDomain[1] = yDomainCandidate[1];
+              }
+          }
+          this.plots.forEach(function (p) {
+              p.updateDomains(xDomain, yDomain, true);
+          });
+      }
+      resizePlots(dimensions) {
+          CanvasDataPlot.prototype.width = dimensions[0];
+          CanvasDataPlot.prototype.height = dimensions[1];
+          this.plots.forEach(function (p) {
+              p.resize(dimensions);
+          });
+      }
+      destroy() {
+          this.plots.forEach(function (p) {
+              p.destroy();
+          });
+          this.lastZoomedPlot = null;
+          this.plots = [];
+      }
+      createPlot(plotType, plotConfig) {
+          if (plotType === "CanvasTimeSeriesPlot") {
+              return new CanvasTimeSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
+          }
+          if (plotType === "CanvasVectorSeriesPlot") {
+              return new CanvasVectorSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
+          }
+          return new CanvasDataPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
+      }
+      setViews(except, xDomain, yDomain) {
+          this.lastZoomedPlot = except;
+          if (!this.syncPlots) {
+              return;
+          }
+          this.plots.forEach((function (p) {
+              if (p != except) {
+                  p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
+              }
+          }).bind(this));
+      }
+  }
+
+  function getDemoPlotSize() {
+      return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
+  }
   function randomDate() {
       return new Date(new Date(2012, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2012, 0, 1).getTime()));
   }
@@ -7388,6 +7670,43 @@
       plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
       plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, true);
       plot2.setZoomYAxis(false);
+      $(window).resize(function () {
+          plot2.resize(getDemoPlotSize());
+      });
+      var time$$1 = new Date(now$$1);
+      time$$1.setHours(101);
+      var newDataPoint = [time$$1, 1.5];
+      plot2.addDataPoint("ds1", newDataPoint, true, true);
+      newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
+      var tsPlotGroup = new CanvasDataPlotGroup(select("#maincontainer"), [550, 350], true, true, {});
+      tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
+          yAxisLabel: "Voltage [V]"
+      });
+      tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds2", "Signal 2", ts2, "steelblue", {
+          yAxisLabel: "Voltage [V]",
+          plotLineWidth: 1.5
+      });
+      tsPlotGroup.addDataSet("CanvasDataPlot", "ds3", "Signal 3", ts2, "blue", {
+          yAxisLabel: "Voltage [V]"
+      });
+      tsPlotGroup.removeDataSet("ds3");
+      tsPlotGroup.setSyncViews(true, true, false);
+      var plot3 = new CanvasVectorSeriesPlot(select("#maincontainer"), [750, 500], {
+          yAxisLabel: "Depth [m]",
+          maxInformationDensity: 0.3,
+          plotLineWidth: 1.5,
+          vectorScale: 7.0e5,
+          scaleUnits: "mm/s"
+      });
+      var tsVector1 = [];
+      for (var i = 0; i < 1000; ++i) {
+          var time$$1 = new Date(now$$1);
+          time$$1.setHours(i);
+          // tsVector1.push([time, 50, 0.01*i*Math.PI, 100]);
+          tsVector1.push([time$$1, 0.01 * i * Math.PI]);
+      }
+      plot3.addDataSet("ts1", "Velocity", tsVector1, "steelblue", true);
+      plot3.setZoomYAxis(false);
   });
 
 })));

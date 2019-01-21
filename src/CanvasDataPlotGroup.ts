@@ -36,17 +36,17 @@ export class CanvasDataPlotGroup {
             this.defaultConfig["updateViewCallback"] = (this.multiplePlots ? (this.setViews).bind(this) : null);    
     }
 
-    addDataSet(plotType: string, uniqueID: string, displayName: string, dataSet: Array<[Date, number]> , color: string, plotConfig: boolean): void {
+    addDataSet(plotType: string, uniqueID: string, displayName: string, dataSet: Array<[Date, number]> , color: string, plotConfig: CanvasDataPlot.Config): void {
         if(this.multiplePlots || this.plots.length < 1) {
             var config: CanvasDataPlot.Config = null;
-            if(plotConfig) {
+         if(<any>plotConfig) {
                 config = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(plotConfig);
                 CanvasDataPlot.prototype.CanvasPlot_appendToObject(config, this.defaultConfig);
             }
             else {
                 config = this.defaultConfig;
             }
-            if(plotConfig && this.multiplePlots) {
+            if(<any>plotConfig && this.multiplePlots) {
                 config["updateViewCallback"] = (this.setViews).bind(this);
             }
             var p: CanvasDataPlot = this.createPlot(plotType, config);

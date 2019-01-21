@@ -7235,11 +7235,11 @@
           this.maxInformationDensity = config.maxInformationDensity || 2.0;
           this.showMarkerDensity = config.showMarkerDensity || 0.14;
           CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
-          Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
+          // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
       }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
           this.informationDensity.push(1);
-          CanvasDataPlot.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
+          this.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
       }
       removeDataSet(uniqueID) {
           var index = CanvasDataPlot.prototype.dataIDs.indexOf(uniqueID);

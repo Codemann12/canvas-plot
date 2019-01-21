@@ -12,7 +12,7 @@ export declare class CanvasDataPlotGroup {
     zoomXAxis: boolean;
     zoomYAxis: boolean;
     constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, plotDimensions: Array<number>, multiplePlots: boolean, syncPlots: boolean, defaultConfig?: CanvasDataPlotGroup.defaultConfig);
-    addDataSet(plotType: string, uniqueID: string, displayName: string, dataSet: Array<[Date, number]>, color: string, plotConfig: boolean): void;
+    addDataSet(plotType: string, uniqueID: string, displayName: string, dataSet: Array<[Date, number]>, color: string, plotConfig: CanvasDataPlot.Config): void;
     removeDataSet(uniqueID: string): void;
     setSyncViews(sync: boolean, translateX: boolean, translateY: boolean): void;
     setZoomXAxis(zoomX: boolean): void;

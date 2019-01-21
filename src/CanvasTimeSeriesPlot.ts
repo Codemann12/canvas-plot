@@ -7,7 +7,7 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot{
     plotLineWidth: number;
     maxInformationDensity: number;
     showMarkerDensity: number;
-   
+     
 	
 	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
         super(parentElement, canvasDimensions, config);
@@ -17,13 +17,13 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot{
         this.maxInformationDensity = config.maxInformationDensity || 2.0;
         this.showMarkerDensity = config.showMarkerDensity || 0.14;
         CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
-        Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
+       // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
     }
    
     
-    addDataSet (uniqueID: string, label: string, dataSet: Array<[Date, number]>, colorString: string, updateDomains: boolean, copyData: boolean): void{
+    addDataSet (uniqueID: string, label: string, dataSet: Array<[Date, number]>, colorString: string, updateDomains: boolean, copyData?: boolean): void{
         this.informationDensity.push(1);
-        CanvasDataPlot.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);      
+        this.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);      
     }
 
 
