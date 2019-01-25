@@ -42,8 +42,8 @@ export declare class CanvasDataPlot {
     svgTranslateGroup: d3.Selection<any, {}, any, {}>;
     xScale: d3Axis.AxisScale<any>;
     yScale: d3Axis.AxisScale<number>;
-    xAxis: d3Axis.Axis<number>;
-    yAxis: d3Axis.Axis<number>;
+    xAxis: d3Axis.Axis<d3Axis.AxisDomain>;
+    yAxis: d3Axis.Axis<d3Axis.AxisDomain>;
     xAxisLabel: d3.Selection<SVGTextElement, {}, any, {}>;
     yAxisLabel: d3.Selection<SVGTextElement, {}, any, {}>;
     yAxisGroup: d3.Selection<any, {}, any, {}>;
@@ -81,6 +81,8 @@ export declare class CanvasDataPlot {
     updateDisplayIndices(): void;
     redrawCanvasAndAxes(): void;
     drawCanvas(): void;
+    private make_x_gridlines;
+    private make_y_gridlines;
     drawGrid(): void;
     drawDataSet(dataIndex: number): void;
     resetZoomListenerAxes(): void;

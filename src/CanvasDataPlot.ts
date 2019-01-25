@@ -49,8 +49,8 @@ export class CanvasDataPlot{
 
 	xScale: d3Axis.AxisScale<any>;
 	yScale: d3Axis.AxisScale<number>;
-	xAxis: d3Axis.Axis<number>;
-	yAxis: d3Axis.Axis<number>;
+	xAxis: d3Axis.Axis<d3Axis.AxisDomain>;
+	yAxis: d3Axis.Axis<d3Axis.AxisDomain>;
 	xAxisLabel: d3.Selection<SVGTextElement, {} , any , {}>; 
 	yAxisLabel: d3.Selection<SVGTextElement, {} , any , {}>;
 	yAxisGroup: d3.Selection<any, {} , any , {}>;
@@ -136,7 +136,7 @@ export class CanvasDataPlot{
 		this.yAxis  = null;
 		this.setupXScaleAndAxis();
 	    this.setupYScaleAndAxis();
-// axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
+
 	this.yAxisGroup = this.svgTranslateGroup.append("g")
 		.attr("class", "y cvpAxis")
 		.call(this.yAxis);
@@ -185,9 +185,6 @@ export class CanvasDataPlot{
 	}
 	// to be implement later
 	zoomFunction(): void {}	
-
-	
-
 
 	addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[Date, number]>, colorString?: string,
 		 updateDomains?: boolean, copyData?: boolean) : void{
@@ -587,11 +584,8 @@ export class CanvasDataPlot{
 	}
 	
 	drawCanvas(): void {
-
 		this.canvas.clearRect(0, 0, this.width, this.height);
-	
 		this.drawGrid();
-	
 		var nDataSets = this.data.length;
 		for(var i=0; i<nDataSets; ++i) {
 			this.drawDataSet(i);
@@ -599,12 +593,50 @@ export class CanvasDataPlot{
 		
 	}
 
+	private make_x_gridlines(): d3Axis.Axis<number>{		
+		return d3.axisBottom(this.xScale)
+			.ticks(5)
+	}
+	
+	// gridlines in y axis function
+	private make_y_gridlines(): d3Axis.Axis<number> {		
+		return d3.axisLeft(this.yScale)
+			.ticks(5)
+	}
+
 	 
 	drawGrid() {
 		this.canvas.lineWidth = 1;
 		this.canvas.strokeStyle = this.gridColor;
-		this.canvas.beginPath(); 	
-		this.yScale.arguments(this.yAxis.tickArguments()[0]).
+		this.canvas.beginPath(); 
+		// test block
+		// add the X gridlines
+		this.d3Canvas.append("g")			
+		.attr("class", "grid")
+		.attr("transform", "translate(0," + this.height + ")")
+		.call(this.make_x_gridlines()
+			.tickSize(-this.height)
+			.tickFormat(d3.format(".2f"))
+		);
+
+		  // add the Y gridlines
+		this.d3Canvas.append("g")		
+		.attr("class", "grid")
+		.call(this.make_y_gridlines()
+		  .tickSize(-this.width)
+			  .tickFormat(d3.format(".2f"))
+		  );
+
+		    // add the X Axis
+ this.d3Canvas.append("g")
+  .attr("transform", "translate(0," + this.height + ")")
+  .call(d3.axisBottom(this.xScale));
+
+// add the Y Axis
+this.d3Canvas.append("g")
+  .call(d3.axisLeft(this.yScale));
+
+		/*this.yScale.arguments(this.yAxis.tickArguments()[0]).
 			map((function(d:number) { return Math.floor(this.yScale(d))+0.5; }).bind(this))
 			.forEach((function(d:number) {
 				this.canvas.moveTo(0, d);
@@ -615,7 +647,7 @@ export class CanvasDataPlot{
 			.forEach((function(d: number) {
 				this.canvas.moveTo(d, 0);
 				this.canvas.lineTo(d, this.height);
-			}).bind(this));
+			}).bind(this));*/
 		this.canvas.stroke();
 		
 	}

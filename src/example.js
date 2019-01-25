@@ -6766,7 +6766,6 @@
           this.yAxis = null;
           this.setupXScaleAndAxis();
           this.setupYScaleAndAxis();
-          // axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
           this.yAxisGroup = this.svgTranslateGroup.append("g")
               .attr("class", "y cvpAxis")
               .call(this.yAxis);
@@ -7143,22 +7142,51 @@
               this.drawDataSet(i);
           }
       }
+      make_x_gridlines() {
+          return axisBottom(this.xScale)
+              .ticks(5);
+      }
+      // gridlines in y axis function
+      make_y_gridlines() {
+          return axisLeft(this.yScale)
+              .ticks(5);
+      }
       drawGrid() {
           this.canvas.lineWidth = 1;
           this.canvas.strokeStyle = this.gridColor;
           this.canvas.beginPath();
-          this.yScale.arguments(this.yAxis.tickArguments()[0]).
-              map((function (d) { return Math.floor(this.yScale(d)) + 0.5; }).bind(this))
-              .forEach((function (d) {
-              this.canvas.moveTo(0, d);
-              this.canvas.lineTo(this.width, d);
-          }).bind(this));
+          // add the X gridlines
+          this.d3Canvas.append("g")
+              .attr("class", "grid")
+              .attr("transform", "translate(0," + this.height + ")")
+              .call(this.make_x_gridlines()
+              .tickSize(-this.height)
+              .tickFormat(format(".2f")));
+          // add the Y gridlines
+          this.d3Canvas.append("g")
+              .attr("class", "grid")
+              .call(this.make_y_gridlines()
+              .tickSize(-this.width)
+              .tickFormat(format(".2f")));
+          // add the X Axis
+          this.d3Canvas.append("g")
+              .attr("transform", "translate(0," + this.height + ")")
+              .call(axisBottom(this.xScale));
+          // add the Y Axis
+          this.d3Canvas.append("g")
+              .call(axisLeft(this.yScale));
+          /*this.yScale.arguments(this.yAxis.tickArguments()[0]).
+              map((function(d:number) { return Math.floor(this.yScale(d))+0.5; }).bind(this))
+              .forEach((function(d:number) {
+                  this.canvas.moveTo(0, d);
+                  this.canvas.lineTo(this.width, d);
+              }).bind(this));
           this.xScale.arguments(this.xAxis.tickArguments()[0])
-              .map((function (d) { return Math.floor(this.xScale(d)) + 0.5; }).bind(this))
-              .forEach((function (d) {
-              this.canvas.moveTo(d, 0);
-              this.canvas.lineTo(d, this.height);
-          }).bind(this));
+              .map((function(d:number) { return Math.floor(this.xScale(d))+0.5; }).bind(this))
+              .forEach((function(d: number) {
+                  this.canvas.moveTo(d, 0);
+                  this.canvas.lineTo(d, this.height);
+              }).bind(this));*/
           this.canvas.stroke();
       }
       drawDataSet(dataIndex) {
