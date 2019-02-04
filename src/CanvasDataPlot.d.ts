@@ -6,7 +6,7 @@ export declare class CanvasDataPlot {
     config: CanvasDataPlot.Config;
     data: Array<Array<[Date, number]>>;
     dataIDs: Array<string>;
-    dataLabels: Array<String>;
+    dataLabels: Array<string>;
     displayIndexStart: Array<number>;
     displayIndexEnd: Array<number>;
     dataColors: Array<string>;
@@ -49,7 +49,7 @@ export declare class CanvasDataPlot {
     yAxisGroup: d3.Selection<any, {}, any, {}>;
     xAxisGroup: d3.Selection<any, {}, any, {}>;
     tooltip: d3.Selection<any, {}, any, {}>;
-    legend: any;
+    legend: d3.Selection<any, {}, any, {}>;
     legendBG: any;
     showTooltips: boolean;
     xAxisZoom: boolean;
@@ -81,8 +81,6 @@ export declare class CanvasDataPlot {
     updateDisplayIndices(): void;
     redrawCanvasAndAxes(): void;
     drawCanvas(): void;
-    private make_x_gridlines;
-    private make_y_gridlines;
     drawGrid(): void;
     drawDataSet(dataIndex: number): void;
     resetZoomListenerAxes(): void;

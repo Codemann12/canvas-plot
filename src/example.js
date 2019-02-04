@@ -6931,7 +6931,7 @@
       }
       calculateXDomain() {
           let nonEmptySets = [];
-          this.data.forEach(function (ds) {
+          this.data.forEach(ds => {
               if (ds && ds.length > 0) {
                   nonEmptySets.push(ds);
               }
@@ -7090,7 +7090,7 @@
               .attr("width", 250)
               .attr("height", this.legendYPadding + this.dataLabels.length * (this.legendYPadding + this.legendLineHeight) - 1);
           var maxTextLen = 0;
-          this.dataLabels.forEach((function (i) {
+          this.dataLabels.forEach((s, i) => {
               this.legend.append("rect")
                   .attr("x", this.legendXPadding)
                   .attr("y", this.legendYPadding + i * (this.legendYPadding + this.legendLineHeight))
@@ -7103,7 +7103,7 @@
                   .attr("y", this.legendYPadding + this.legendLineHeight + i * (this.legendYPadding + this.legendLineHeight) - 1)
                   .text(this.dataLabels[i].length > 0 ? this.dataLabels[i] : this.dataIDs[i]);
               maxTextLen = Math.max(maxTextLen, textElem.node().getComputedTextLength());
-          }).bind(this));
+          });
           this.legendWidth = 3 * this.legendXPadding + this.legendLineHeight + maxTextLen - 1;
           this.legendBG.attr("width", this.legendWidth);
           this.legend
@@ -7142,52 +7142,22 @@
               this.drawDataSet(i);
           }
       }
-      make_x_gridlines() {
-          return axisBottom(this.xScale)
-              .ticks(5);
-      }
-      // gridlines in y axis function
-      make_y_gridlines() {
-          return axisLeft(this.yScale)
-              .ticks(5);
-      }
       drawGrid() {
           this.canvas.lineWidth = 1;
           this.canvas.strokeStyle = this.gridColor;
           this.canvas.beginPath();
-          // add the X gridlines
-          this.d3Canvas.append("g")
-              .attr("class", "grid")
-              .attr("transform", "translate(0," + this.height + ")")
-              .call(this.make_x_gridlines()
-              .tickSize(-this.height)
-              .tickFormat(format(".2f")));
-          // add the Y gridlines
-          this.d3Canvas.append("g")
-              .attr("class", "grid")
-              .call(this.make_y_gridlines()
-              .tickSize(-this.width)
-              .tickFormat(format(".2f")));
-          // add the X Axis
-          this.d3Canvas.append("g")
-              .attr("transform", "translate(0," + this.height + ")")
-              .call(axisBottom(this.xScale));
-          // add the Y Axis
-          this.d3Canvas.append("g")
-              .call(axisLeft(this.yScale));
-          /*this.yScale.arguments(this.yAxis.tickArguments()[0]).
-              map((function(d:number) { return Math.floor(this.yScale(d))+0.5; }).bind(this))
-              .forEach((function(d:number) {
-                  this.canvas.moveTo(0, d);
-                  this.canvas.lineTo(this.width, d);
-              }).bind(this));
-          this.xScale.arguments(this.xAxis.tickArguments()[0])
-              .map((function(d:number) { return Math.floor(this.xScale(d))+0.5; }).bind(this))
-              .forEach((function(d: number) {
-                  this.canvas.moveTo(d, 0);
-                  this.canvas.lineTo(d, this.height);
-              }).bind(this));*/
+          for (var i = 1; i <= Math.floor(this.width / 40); i++) {
+              var x = (i * 50);
+              this.canvas.moveTo(0, x);
+              this.canvas.lineTo(this.width, x);
+          }
+          for (var j = 1; j <= Math.floor(this.height / 40); j++) {
+              var y = (j * 50);
+              this.canvas.moveTo(y, 0);
+              this.canvas.lineTo(y, this.height);
+          }
           this.canvas.stroke();
+          this.canvas.closePath();
       }
       drawDataSet(dataIndex) {
           var d = this.data[dataIndex];
