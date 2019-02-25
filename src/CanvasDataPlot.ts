@@ -344,8 +344,8 @@ export class CanvasDataPlot{
 		});
 		
 		if(nonEmptySets.length < 1) {
-			//return [0, 1]; 
-			return [];
+			return [new Date("2019-02-24"), new Date()]; 
+			//return [];
 		}
 	
 		var min = nonEmptySets[0][0][0];
@@ -358,7 +358,7 @@ export class CanvasDataPlot{
 		}
 		// check this block during test phase
 		if(max.getTime()-min.getTime() <= 0) {
-			min.setTime((1000 * 60 * 60 * 24)*max.getTime()); //NOTE: 1* is neceseccary to handle Dates in derived classes.
+			min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
 			max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
 		}
 		return [min, max];
@@ -399,16 +399,15 @@ export class CanvasDataPlot{
 
 
 	setupXScaleAndAxis(){
+		console.log(this.calculateXDomain())
 		this.xScale = d3.scaleLinear()
 			.domain(this.calculateXDomain())
 			.range([0, this.width])
 			.nice();
 	
 		this.xAxis = d3.axisBottom(this.xScale)
-		  			.ticks(Math.round(this.xTicksPerPixel*this.width));
+					  .ticks(Math.round(this.xTicksPerPixel*this.width));	
 	}
-
-
 
 
     setupYScaleAndAxis():void {
@@ -418,7 +417,7 @@ export class CanvasDataPlot{
 			.nice();
 	
 		this.yAxis = d3.axisLeft(this.yScale)
-			.ticks(Math.round(this.yTicksPerPixel*this.height));
+			.ticks(Math.round(this.yTicksPerPixel*this.height));		
 	}
 
 

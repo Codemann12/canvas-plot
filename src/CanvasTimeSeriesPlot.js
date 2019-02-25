@@ -83,9 +83,9 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot {
         return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
     }
     setupXScaleAndAxis() {
-        CanvasDataPlot.prototype.xScale = d3.scaleTime()
-            .domain(CanvasDataPlot.prototype.calculateXDomain())
-            .range([0, CanvasDataPlot.prototype.width])
+        this.xScale = d3.scaleTime()
+            .domain(this.calculateXDomain())
+            .range([0, this.width])
             .nice();
         var formatMilliSecond = d3.timeFormat(".%L"), formatSecond = d3.timeFormat(":%S"), formatHour = d3.timeFormat("%I:%p"), formatWeek = d3.timeFormat("%b %d"), formatMonth = d3.timeFormat("%B"), formatYear = d3.timeFormat("%Y");
         let multiFormat = (date) => {

@@ -109,9 +109,9 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot{
 
     
     setupXScaleAndAxis() {
-        CanvasDataPlot.prototype.xScale = d3.scaleTime()
-            .domain(CanvasDataPlot.prototype.calculateXDomain())
-            .range([0, CanvasDataPlot.prototype.width])
+            this.xScale = d3.scaleTime()
+            .domain(this.calculateXDomain())
+            .range([0, this.width])
             .nice();
     
         
