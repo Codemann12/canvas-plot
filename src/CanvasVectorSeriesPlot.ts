@@ -24,7 +24,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
         }
         
         CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
-        Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+        //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
         
     }
 

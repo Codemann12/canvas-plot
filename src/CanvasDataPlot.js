@@ -60,10 +60,10 @@ export class CanvasDataPlot {
         this.setupXScaleAndAxis();
         this.setupYScaleAndAxis();
         this.yAxisGroup = this.svgTranslateGroup.append("g")
-            .attr("class", "y cvpAxis")
+            .attr("class", "y axis")
             .call(this.yAxis);
         this.xAxisGroup = this.svgTranslateGroup.append("g")
-            .attr("class", "x cvpAxis")
+            .attr("class", "x axis")
             .attr("transform", "translate(0," + this.height + ")")
             .call(this.xAxis);
         this.xAxisLabel = null;
@@ -230,8 +230,8 @@ export class CanvasDataPlot {
             }
         });
         if (nonEmptySets.length < 1) {
-            return [new Date("2019-02-24"), new Date()];
-            //return [];
+            //return [new Date("2019-02-24"), new Date()]; 
+            return [0, 1];
         }
         var min = nonEmptySets[0][0][0];
         var max = nonEmptySets[0][nonEmptySets[0].length - 1][0];
@@ -241,14 +241,12 @@ export class CanvasDataPlot {
             min = minCandidate < min ? minCandidate : min;
             max = max < maxCandidate ? maxCandidate : max;
         }
-        // check this block during test phase
-        if (max.getTime() - min.getTime() <= 0) {
+        if (max - min <= 0) {
             min.setTime((1000 * 60 * 60 * 24) * max.getTime());
             max.setTime(min.getTime() + (1000 * 60 * 60 * 24));
         }
         return [min, max];
     }
-    //data : Array<Array<[number, number]>>;
     calculateYDomain() {
         let nonEmptySets = [];
         this.data.forEach(function (ds) {
@@ -275,7 +273,6 @@ export class CanvasDataPlot {
         this.div.remove();
     }
     setupXScaleAndAxis() {
-        console.log(this.calculateXDomain());
         this.xScale = d3.scaleLinear()
             .domain(this.calculateXDomain())
             .range([0, this.width])

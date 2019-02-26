@@ -2,13 +2,12 @@ import * as d3 from 'd3';
 import { CanvasDataPlot } from './CanvasDataPlot';
 export class CanvasTimeSeriesPlot extends CanvasDataPlot {
     constructor(parentElement, canvasDimensions, config = {}) {
-        super(parentElement, canvasDimensions, config);
+        super(parentElement = null, canvasDimensions, config);
         config = config || {};
         this.informationDensity = [];
         this.plotLineWidth = config.plotLineWidth || 1;
         this.maxInformationDensity = config.maxInformationDensity || 2.0;
         this.showMarkerDensity = config.showMarkerDensity || 0.14;
-        CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
         // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
     }
     addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {

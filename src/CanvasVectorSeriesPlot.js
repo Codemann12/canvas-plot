@@ -12,7 +12,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
             configCopy["invertYAxis"] = true;
         }
         CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
-        Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+        //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
     }
     // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
     getTooltipStringY(dataPoint) {

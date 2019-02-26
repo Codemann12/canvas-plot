@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsv(delimiter) {
+  function dsvFormat(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,19 +3479,9 @@
     };
   }
 
-  var csv = dsv(",");
+  var csv = dsvFormat(",");
 
-  var csvParse = csv.parse;
-  var csvParseRows = csv.parseRows;
-  var csvFormat = csv.format;
-  var csvFormatRows = csv.formatRows;
-
-  var tsv = dsv("\t");
-
-  var tsvParse = tsv.parse;
-  var tsvParseRows = tsv.parseRows;
-  var tsvFormat = tsv.format;
-  var tsvFormatRows = tsv.formatRows;
+  var tsv = dsvFormat("\t");
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -4812,6 +4802,8 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
+  var mondays = monday.range;
+  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4901,6 +4893,8 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
+  var utcMondays = utcMonday.range;
+  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -6774,12 +6768,13 @@
           this.yScale = null;
           this.xAxis = null;
           this.yAxis = null;
-          // axis are initialized with null-- Uncaught TypeError: Cannot read property 'apply' of null
+          this.setupXScaleAndAxis();
+          this.setupYScaleAndAxis();
           this.yAxisGroup = this.svgTranslateGroup.append("g")
-              .attr("class", "y cvpAxis")
+              .attr("class", "y axis")
               .call(this.yAxis);
           this.xAxisGroup = this.svgTranslateGroup.append("g")
-              .attr("class", "x cvpAxis")
+              .attr("class", "x axis")
               .attr("transform", "translate(0," + this.height + ")")
               .call(this.xAxis);
           this.xAxisLabel = null;
@@ -6940,14 +6935,14 @@
       }
       calculateXDomain() {
           let nonEmptySets = [];
-          this.data.forEach(function (ds) {
+          this.data.forEach(ds => {
               if (ds && ds.length > 0) {
                   nonEmptySets.push(ds);
               }
           });
           if (nonEmptySets.length < 1) {
-              //return [0, 1]; 
-              return [];
+              //return [new Date("2019-02-24"), new Date()]; 
+              return [0, 1];
           }
           var min$$1 = nonEmptySets[0][0][0];
           var max$$1 = nonEmptySets[0][nonEmptySets[0].length - 1][0];
@@ -6957,14 +6952,12 @@
               min$$1 = minCandidate < min$$1 ? minCandidate : min$$1;
               max$$1 = max$$1 < maxCandidate ? maxCandidate : max$$1;
           }
-          // check this block during test phase
-          if (max$$1.getTime() - min$$1.getTime() <= 0) {
-              min$$1.setTime((1000 * 60 * 60 * 24) * max$$1.getTime()); //NOTE: 1* is neceseccary to handle Dates in derived classes.
+          if (max$$1 - min$$1 <= 0) {
+              min$$1.setTime((1000 * 60 * 60 * 24) * max$$1.getTime());
               max$$1.setTime(min$$1.getTime() + (1000 * 60 * 60 * 24));
           }
           return [min$$1, max$$1];
       }
-      //data : Array<Array<[number, number]>>;
       calculateYDomain() {
           let nonEmptySets = [];
           this.data.forEach(function (ds) {
@@ -7099,7 +7092,7 @@
               .attr("width", 250)
               .attr("height", this.legendYPadding + this.dataLabels.length * (this.legendYPadding + this.legendLineHeight) - 1);
           var maxTextLen = 0;
-          this.dataLabels.forEach((function (i) {
+          this.dataLabels.forEach((s, i) => {
               this.legend.append("rect")
                   .attr("x", this.legendXPadding)
                   .attr("y", this.legendYPadding + i * (this.legendYPadding + this.legendLineHeight))
@@ -7112,7 +7105,7 @@
                   .attr("y", this.legendYPadding + this.legendLineHeight + i * (this.legendYPadding + this.legendLineHeight) - 1)
                   .text(this.dataLabels[i].length > 0 ? this.dataLabels[i] : this.dataIDs[i]);
               maxTextLen = Math.max(maxTextLen, textElem.node().getComputedTextLength());
-          }).bind(this));
+          });
           this.legendWidth = 3 * this.legendXPadding + this.legendLineHeight + maxTextLen - 1;
           this.legendBG.attr("width", this.legendWidth);
           this.legend
@@ -7155,19 +7148,18 @@
           this.canvas.lineWidth = 1;
           this.canvas.strokeStyle = this.gridColor;
           this.canvas.beginPath();
-          this.yScale.arguments(this.yAxis.tickArguments()[0]).
-              map((function (d) { return Math.floor(this.yScale(d)) + 0.5; }).bind(this))
-              .forEach((function (d) {
-              this.canvas.moveTo(0, d);
-              this.canvas.lineTo(this.width, d);
-          }).bind(this));
-          this.xScale.arguments(this.xAxis.tickArguments()[0])
-              .map((function (d) { return Math.floor(this.xScale(d)) + 0.5; }).bind(this))
-              .forEach((function (d) {
-              this.canvas.moveTo(d, 0);
-              this.canvas.lineTo(d, this.height);
-          }).bind(this));
+          for (var i = 1; i <= Math.floor(this.width / 40); i++) {
+              var x = (i * 50);
+              this.canvas.moveTo(0, x);
+              this.canvas.lineTo(this.width, x);
+          }
+          for (var j = 1; j <= Math.floor(this.height / 40); j++) {
+              var y = (j * 50);
+              this.canvas.moveTo(y, 0);
+              this.canvas.lineTo(y, this.height);
+          }
           this.canvas.stroke();
+          this.canvas.closePath();
       }
       drawDataSet(dataIndex) {
           var d = this.data[dataIndex];
@@ -7309,9 +7301,9 @@
           return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
       }
       setupXScaleAndAxis() {
-          CanvasDataPlot.prototype.xScale = time()
-              .domain(CanvasDataPlot.prototype.calculateXDomain())
-              .range([0, CanvasDataPlot.prototype.width])
+          this.xScale = time()
+              .domain(this.calculateXDomain())
+              .range([0, this.width])
               .nice();
           var formatMilliSecond = timeFormat(".%L"), formatSecond = timeFormat(":%S"), formatHour = timeFormat("%I:%p"), formatWeek = timeFormat("%b %d"), formatMonth = timeFormat("%B"), formatYear = timeFormat("%Y");
           let multiFormat = (date$$1) => {
@@ -7374,7 +7366,7 @@
               configCopy["invertYAxis"] = true;
           }
           CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
-          Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+          //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
       }
       // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
       getTooltipStringY(dataPoint) {

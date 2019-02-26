@@ -10,13 +10,12 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot{
      
 	
 	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
-        super(parentElement, canvasDimensions, config);
+        super(parentElement = null, canvasDimensions, config); // modify the CanvasPlot Constructor to avoid this setting.
         config = config || {};
         this.informationDensity = [];
         this.plotLineWidth = config.plotLineWidth || 1;
         this.maxInformationDensity = config.maxInformationDensity || 2.0;
         this.showMarkerDensity = config.showMarkerDensity || 0.14;
-        CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
        // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
     }
    

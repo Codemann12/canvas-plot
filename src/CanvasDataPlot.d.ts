@@ -65,8 +65,8 @@ export declare class CanvasDataPlot {
     updateDomains(xDomain: Array<Date>, yDomain: Array<number>, makeItNice: boolean): void;
     getXDomain(): Array<Date>;
     getYDomain(): Array<number>;
-    calculateXDomain(): Array<Date>;
-    calculateYDomain(): Array<number>;
+    calculateXDomain(): any;
+    calculateYDomain(): any;
     destroy(): void;
     setupXScaleAndAxis(): void;
     setupYScaleAndAxis(): void;

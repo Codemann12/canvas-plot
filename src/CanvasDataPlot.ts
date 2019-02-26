@@ -135,53 +135,55 @@ export class CanvasDataPlot{
 		this.xAxis  = null;
 		this.yAxis  = null;
 		this.setupXScaleAndAxis();
-	    this.setupYScaleAndAxis();
-
-	this.yAxisGroup = this.svgTranslateGroup.append("g")
-		.attr("class", "y cvpAxis")
-		.call(this.yAxis);
-
-	this.xAxisGroup = this.svgTranslateGroup.append("g")
-		.attr("class", "x cvpAxis")
-		.attr("transform", "translate(0,"+this.height+")")
-		.call(this.xAxis);
-
-	this.xAxisLabel = null;
-	this.yAxisLabel = null;
-	if(this.xAxisLabelText.length > 0) {
-		this.xAxisLabel = this.svgTranslateGroup.append("text")
-			.attr("class", "cvpLabel")
-			.attr("x", Math.round(0.5*this.width))
-			.attr("y", this.height + 40)
-			.attr("text-anchor", "middle")
-			.text(this.xAxisLabelText);
-	}
-
-
-	if(this.yAxisLabelText.length > 0) {
-		this.yAxisLabel = this.svg.append("text")
-			.attr("class", "cvpLabel")
-			.attr("x", Math.round(-0.5*this.height - this.margin.top))
-			.attr("y", 15)
-			.attr("transform", "rotate(-90)")
-			.attr("text-anchor", "middle")
-			.text(this.yAxisLabelText);
-	}
-
-	this.tooltip = null;
-	this.legend = null;
-	this.legendBG = null;
-	this.legendWidth = 0;
+		this.setupYScaleAndAxis();
 	
 
-	if(this.showTooltips) {
-		this.div.on("mousemove", (this.updateTooltip).bind(this));
-	}
+	    this.yAxisGroup = this.svgTranslateGroup.append("g")
+			.attr("class", "y axis")
+			.call(this.yAxis);
 
-	this.xAxisZoom = true;
-	this.yAxisZoom = true;
-	this.drawCanvas();
-	this.resetZoomListenerAxes();
+		this.xAxisGroup = this.svgTranslateGroup.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0,"+this.height+")")
+			.call(this.xAxis);
+
+		this.xAxisLabel = null;
+		this.yAxisLabel = null;
+		if(this.xAxisLabelText.length > 0) {
+			this.xAxisLabel = this.svgTranslateGroup.append("text")
+				.attr("class", "cvpLabel")
+				.attr("x", Math.round(0.5*this.width))
+				.attr("y", this.height + 40)
+				.attr("text-anchor", "middle")
+				.text(this.xAxisLabelText);
+		}
+
+
+		if(this.yAxisLabelText.length > 0) {
+			this.yAxisLabel = this.svg.append("text")
+				.attr("class", "cvpLabel")
+				.attr("x", Math.round(-0.5*this.height - this.margin.top))
+				.attr("y", 15)
+				.attr("transform", "rotate(-90)")
+				.attr("text-anchor", "middle")
+				.text(this.yAxisLabelText);
+		}
+
+		this.tooltip = null;
+		this.legend = null;
+		this.legendBG = null;
+		this.legendWidth = 0;
+	
+
+		if(this.showTooltips) {
+			this.div.on("mousemove", (this.updateTooltip).bind(this));
+		}
+
+		this.xAxisZoom = true;
+		this.yAxisZoom = true;
+		this.drawCanvas();
+		this.resetZoomListenerAxes();
+
 	}
 	// to be implement later
 	zoomFunction(): void {}	
@@ -335,7 +337,7 @@ export class CanvasDataPlot{
 	}
 
 
-	calculateXDomain(): Array<Date> {
+	calculateXDomain(): any {
 		let nonEmptySets: Array<Array<[Date,number]>> = [];
 		this.data.forEach(ds => {
 			if(ds && ds.length > 0) {
@@ -344,8 +346,8 @@ export class CanvasDataPlot{
 		});
 		
 		if(nonEmptySets.length < 1) {
-			return [new Date("2019-02-24"), new Date()]; 
-			//return [];
+			//return [new Date("2019-02-24"), new Date()]; 
+			return [0,1];
 		}
 	
 		var min = nonEmptySets[0][0][0];
@@ -356,8 +358,8 @@ export class CanvasDataPlot{
 			min = minCandidate < min ? minCandidate : min;
 			max = max < maxCandidate ? maxCandidate : max;
 		}
-		// check this block during test phase
-		if(max.getTime()-min.getTime() <= 0) {
+	
+		if(<any>max - <any>min <= 0) {
 			min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
 			max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
 		}
@@ -365,8 +367,8 @@ export class CanvasDataPlot{
 	}
 
 
-    //data : Array<Array<[number, number]>>;
-	calculateYDomain(): Array<number>{
+    
+	calculateYDomain(): any{
 		let nonEmptySets: Array<Array<[Date,number]>> = [];
 		this.data.forEach(function(ds) {
 			if(ds && ds.length > 0) {
@@ -399,7 +401,6 @@ export class CanvasDataPlot{
 
 
 	setupXScaleAndAxis(){
-		console.log(this.calculateXDomain())
 		this.xScale = d3.scaleLinear()
 			.domain(this.calculateXDomain())
 			.range([0, this.width])
@@ -589,7 +590,6 @@ export class CanvasDataPlot{
 		for(var i=0; i<nDataSets; ++i) {
 			this.drawDataSet(i);
 		}
-		
 	}
 
 

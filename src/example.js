@@ -6771,10 +6771,10 @@
           this.setupXScaleAndAxis();
           this.setupYScaleAndAxis();
           this.yAxisGroup = this.svgTranslateGroup.append("g")
-              .attr("class", "y cvpAxis")
+              .attr("class", "y axis")
               .call(this.yAxis);
           this.xAxisGroup = this.svgTranslateGroup.append("g")
-              .attr("class", "x cvpAxis")
+              .attr("class", "x axis")
               .attr("transform", "translate(0," + this.height + ")")
               .call(this.xAxis);
           this.xAxisLabel = null;
@@ -6941,8 +6941,8 @@
               }
           });
           if (nonEmptySets.length < 1) {
-              return [new Date("2019-02-24"), new Date()];
-              //return [];
+              //return [new Date("2019-02-24"), new Date()]; 
+              return [0, 1];
           }
           var min$$1 = nonEmptySets[0][0][0];
           var max$$1 = nonEmptySets[0][nonEmptySets[0].length - 1][0];
@@ -6952,14 +6952,12 @@
               min$$1 = minCandidate < min$$1 ? minCandidate : min$$1;
               max$$1 = max$$1 < maxCandidate ? maxCandidate : max$$1;
           }
-          // check this block during test phase
-          if (max$$1.getTime() - min$$1.getTime() <= 0) {
+          if (max$$1 - min$$1 <= 0) {
               min$$1.setTime((1000 * 60 * 60 * 24) * max$$1.getTime());
               max$$1.setTime(min$$1.getTime() + (1000 * 60 * 60 * 24));
           }
           return [min$$1, max$$1];
       }
-      //data : Array<Array<[number, number]>>;
       calculateYDomain() {
           let nonEmptySets = [];
           this.data.forEach(function (ds) {
@@ -6986,7 +6984,6 @@
           this.div.remove();
       }
       setupXScaleAndAxis() {
-          console.log(this.calculateXDomain());
           this.xScale = linear$2()
               .domain(this.calculateXDomain())
               .range([0, this.width])
@@ -7223,13 +7220,12 @@
 
   class CanvasTimeSeriesPlot extends CanvasDataPlot {
       constructor(parentElement, canvasDimensions, config = {}) {
-          super(parentElement, canvasDimensions, config);
+          super(parentElement = null, canvasDimensions, config);
           config = config || {};
           this.informationDensity = [];
           this.plotLineWidth = config.plotLineWidth || 1;
           this.maxInformationDensity = config.maxInformationDensity || 2.0;
           this.showMarkerDensity = config.showMarkerDensity || 0.14;
-          CanvasDataPlot.call(this, parentElement, canvasDimensions, config);
           // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
       }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
@@ -7369,7 +7365,7 @@
               configCopy["invertYAxis"] = true;
           }
           CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
-          Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+          //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
       }
       // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
       getTooltipStringY(dataPoint) {
