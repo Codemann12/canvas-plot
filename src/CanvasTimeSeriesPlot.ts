@@ -1,91 +1,89 @@
 import * as d3 from 'd3';
-import {CanvasDataPlot} from './CanvasDataPlot'
+import {CanvasDataPlot as CDP} from './CanvasDataPlot'
 
 
-export class CanvasTimeSeriesPlot extends CanvasDataPlot{
+export class CanvasTimeSeriesPlot extends CDP{
     informationDensity: Array<number>;
     plotLineWidth: number;
     maxInformationDensity: number;
     showMarkerDensity: number;
-     
 	
-	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
-        super(parentElement = null, canvasDimensions, config); // modify the CanvasPlot Constructor to avoid this setting.
-        config = config || {};
+	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CDP.Config = {}){
+        super(parentElement , canvasDimensions, config); 
+        this.config = config || {};
         this.informationDensity = [];
         this.plotLineWidth = config.plotLineWidth || 1;
         this.maxInformationDensity = config.maxInformationDensity || 2.0;
         this.showMarkerDensity = config.showMarkerDensity || 0.14;
-       // Object.setPrototypeOf(CanvasTimeSeriesPlot.prototype, Object.create(CanvasDataPlot.prototype));
     }
    
     
     addDataSet (uniqueID: string, label: string, dataSet: Array<[Date, number]>, colorString: string, updateDomains: boolean, copyData?: boolean): void{
         this.informationDensity.push(1);
-        this.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);      
+        CDP.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);      
     }
 
 
     removeDataSet(uniqueID: string): void{
-        var index = CanvasDataPlot.prototype.dataIDs.indexOf(uniqueID);
+        var index = this.dataIDs.indexOf(uniqueID);
         if(index >= 0) {
             this.informationDensity.splice(index, 1);
         }
-        CanvasDataPlot.prototype.removeDataSet.call(this, uniqueID);
+        this.removeDataSet.call(this, uniqueID);
     }
 
 
     updateDisplayIndices(): void{
-        CanvasDataPlot.prototype.updateDisplayIndices.call(this);
+        CDP.prototype.updateDisplayIndices.call(this);
     
-        var nDataSets = CanvasDataPlot.prototype.data.length;
+        var nDataSets = this.data.length;
         for(var i=0; i<nDataSets; ++i) {
-            var d = CanvasDataPlot.prototype.data[i];
+            var d = this.data[i];
             if(d.length < 1) {
                 continue;
             }
-            var iStart = CanvasDataPlot.prototype.displayIndexStart[i];
-            var iEnd = CanvasDataPlot.prototype.displayIndexEnd[i];
+            var iStart = this.displayIndexStart[i];
+            var iEnd = this.displayIndexEnd[i];
             var iLength = iEnd - iStart + 1;
-            var scaleLength =  Math.max(1, CanvasDataPlot.prototype.xScale(d[iEnd][0]) - CanvasDataPlot.prototype.xScale(d[iStart][0]));
+            var scaleLength =  Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
             this.informationDensity[i] = iLength/scaleLength;
         }
     }
 
 
     updateTooltipn(): void{
-        var mouse = d3.mouse(CanvasDataPlot.prototype.div.node());
-        var mx = mouse[0] - CanvasDataPlot.prototype.margin.left;
-        var my = mouse[1] - CanvasDataPlot.prototype.margin.top;
-        if(mx <= 0 || mx >= CanvasDataPlot.prototype.width || my <= 0 || my >= CanvasDataPlot.prototype.height) {
-            CanvasDataPlot.prototype.removeTooltip();
+        var mouse = d3.mouse(this.div.node());
+        var mx = mouse[0] - this.margin.left;
+        var my = mouse[1] - this.margin.top;
+        if(mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
+            this.removeTooltip();
             return;
         }
     
-        var nDataSets = CanvasDataPlot.prototype.data.length;
+        var nDataSets = this.data.length;
         var hitMarker = false;
         TimeSeriesPlot_updateTooltip_graph_loop:
         for(var i=0; i<nDataSets; ++i) {
             if(this.informationDensity[i] > this.showMarkerDensity) {
                 continue;
             }
-            var d = CanvasDataPlot.prototype.data[i];
-            var iStart = CanvasDataPlot.prototype.displayIndexStart[i];
-            var iEnd = Math.min(d.length-1, CanvasDataPlot.prototype.displayIndexEnd[i]+1);
+            var d = this.data[i];
+            var iStart = this.displayIndexStart[i];
+            var iEnd = Math.min(d.length-1, this.displayIndexEnd[i]+1);
             for(var j=iStart; j<=iEnd; ++j) {
-                var dx = CanvasDataPlot.prototype.xScale(d[j][0]) - mx;
-                var dy = CanvasDataPlot.prototype.yScale(d[j][1]) - my;
-                if(dx*dx + dy*dy <= CanvasDataPlot.prototype.tooltipRadiusSquared) {
+                var dx = this.xScale(d[j][0]) - mx;
+                var dy = this.yScale(d[j][1]) - my;
+                if(dx*dx + dy*dy <= this.tooltipRadiusSquared) {
                     hitMarker = true;
-                    CanvasDataPlot.prototype.showTooltip([CanvasDataPlot.prototype.xScale(d[j][0]), 
-                    CanvasDataPlot.prototype.yScale(d[j][1])], CanvasDataPlot.prototype.dataColors[i],
-                    CanvasDataPlot.prototype.getTooltipStringX(d[j]), CanvasDataPlot.prototype.getTooltipStringY(d[j]));
+                    this.showTooltip([this.xScale(d[j][0]), 
+                    this.yScale(d[j][1])], this.dataColors[i],
+                    this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
                     break TimeSeriesPlot_updateTooltip_graph_loop;
                 }
             }
         }
         if(!hitMarker){
-            CanvasDataPlot.prototype.removeTooltip();
+            this.removeTooltip();
         }
     }
     
@@ -132,19 +130,19 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot{
         }
         
     
-        CanvasDataPlot.prototype.xAxis = d3.axisBottom(CanvasDataPlot.prototype.xScale)
+        this.xAxis = d3.axisBottom(this.xScale)
             .tickFormat(multiFormat)
-            .ticks(Math.round(CanvasDataPlot.prototype.xTicksPerPixel*CanvasDataPlot.prototype.width));
+            .ticks(Math.round(this.xTicksPerPixel*this.width));
     }
 
 
     drawDataSet(dataIndex: number): void{
-        var d = CanvasDataPlot.prototype.data[dataIndex];
+        var d = this.data[dataIndex];
         if(d.length < 1) {
             return;
         }
-        var iStart = CanvasDataPlot.prototype.displayIndexStart[dataIndex];
-        var iEnd = CanvasDataPlot.prototype.displayIndexEnd[dataIndex];
+        var iStart = this.displayIndexStart[dataIndex];
+        var iEnd = this.displayIndexEnd[dataIndex];
         var informationDensity = this.informationDensity[dataIndex];
     
         var drawEvery = 1;
@@ -155,26 +153,26 @@ export class CanvasTimeSeriesPlot extends CanvasDataPlot{
         // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
         iStart = Math.max(0, iStart - iStart%drawEvery);
     
-        CanvasDataPlot.prototype.canvas.beginPath();
-        CanvasDataPlot.prototype.canvas.moveTo(CanvasDataPlot.prototype.xScale(d[iStart][0]), CanvasDataPlot.prototype.yScale(d[iStart][1]));
+        this.canvas.beginPath();
+        this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
         for(var i=iStart; i<=iEnd; i=i+drawEvery) {
-            CanvasDataPlot.prototype.canvas.lineTo(CanvasDataPlot.prototype.xScale(d[i][0]),
-            CanvasDataPlot.prototype.yScale(d[i][1]));
+            this.canvas.lineTo(this.xScale(d[i][0]),
+            this.yScale(d[i][1]));
         }
         var iLast = Math.min(d.length-1 , iEnd+drawEvery);
-        CanvasDataPlot.prototype.canvas.lineTo(CanvasDataPlot.prototype.xScale(d[iLast][0]),
-        CanvasDataPlot.prototype.yScale(d[iLast][1]));
-        CanvasDataPlot.prototype.canvas.lineWidth = this.plotLineWidth;
-        CanvasDataPlot.prototype.canvas.strokeStyle = CanvasDataPlot.prototype.dataColors[dataIndex];
-        CanvasDataPlot.prototype.canvas.stroke();
+        this.canvas.lineTo(this.xScale(d[iLast][0]),
+        this.yScale(d[iLast][1]));
+        this.canvas.lineWidth = this.plotLineWidth;
+        this.canvas.strokeStyle = this.dataColors[dataIndex];
+        this.canvas.stroke();
     
         if(informationDensity <= this.showMarkerDensity) {
-            CanvasDataPlot.prototype.canvas.lineWidth = CanvasDataPlot.prototype.markerLineWidth;
+            this.canvas.lineWidth = this.markerLineWidth;
             for(var i=iStart; i<=iLast; ++i) {
-                CanvasDataPlot.prototype.canvas.beginPath();
-                CanvasDataPlot.prototype.canvas.arc(CanvasDataPlot.prototype.xScale(d[i][0]), CanvasDataPlot.prototype.yScale(d[i][1]),
-                    CanvasDataPlot.prototype.markerRadius, 0, 2*Math.PI);
-                CanvasDataPlot.prototype.canvas.stroke();
+                this.canvas.beginPath();
+                this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]),
+                    this.markerRadius, 0, 2*Math.PI);
+                this.canvas.stroke();
             }
         }
     }

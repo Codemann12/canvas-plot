@@ -3,12 +3,6 @@ import { CanvasDataPlot } from './CanvasDataPlot';
 import { CanvasTimeSeriesPlot } from './CanvasTimeSeriesPlot';
 import { CanvasVectorSeriesPlot } from './CanvasVectorSeriesPlot';
 import { CanvasDataPlotGroup } from './CanvasDataPlotGroup';
-//const $ = require('jquery');
-// Does not have any use but i love to have it there
-class Demo {
-    constructor() {
-    }
-}
 function getDemoPlotSize() {
     return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
 }
@@ -20,8 +14,8 @@ $(document).ready(function () {
         [randomDate(), Math.floor(Math.random() * 100)],
         [randomDate(), Math.floor(Math.random() * 100)],
         [randomDate(), Math.floor(Math.random() * 100)],
-        [randomDate(), Math.floor(Math.random() * 100)],
         [randomDate(), Math.floor(Math.random() * 100)]];
+    console.log(data1.length + "length of data");
     var plot1 = new CanvasDataPlot(d3.select("#maincontainer"), [1000, 900], {
         xAxisLabel: "IQ",
         yAxisLabel: "Test Score",
@@ -33,7 +27,6 @@ $(document).ready(function () {
     plot1.addDataPoint("ds1", [randomDate(), 10]);
     plot1.addDataPoint("ds1", [randomDate(), 0]);
     plot1.updateDomains([randomDate(), randomDate()], [-60, 15], true);
-    // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
     var ts1 = [];
     var ts2 = [];
     var now = new Date();
@@ -56,7 +49,7 @@ $(document).ready(function () {
     time.setHours(101);
     var newDataPoint = [time, 1.5];
     plot2.addDataPoint("ds1", newDataPoint, true, true);
-    newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
+    // newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
     var tsPlotGroup = new CanvasDataPlotGroup(d3.select("#maincontainer"), [550, 350], true, true, {});
     tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
         yAxisLabel: "Voltage [V]"

@@ -1,5 +1,6 @@
-import { CanvasTimeSeriesPlot } from './CanvasTimeSeriesPlot';
-export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
+import { CanvasTimeSeriesPlot as CTP } from './CanvasTimeSeriesPlot';
+import { CanvasDataPlot as CDP } from './CanvasDataPlot';
+export class CanvasVectorSeriesPlot extends CTP {
     constructor(parentElement, canvasDimensions, config = {}) {
         super(parentElement, canvasDimensions, config);
         this.vectorScale = config.vectorScale || 2.0e5;
@@ -7,12 +8,10 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
         this.scaleLength = config.scaleLength || 75;
         this.scaleTextElem = null;
         var configCopy = this.CanvasPlot_shallowObjectCopy(config);
-        //configCopy["showTooltips"] = false;
+        configCopy["showTooltips"] = true;
         if (!("invertYAxis" in configCopy)) {
             configCopy["invertYAxis"] = true;
         }
-        CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
-        //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
     }
     // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
     getTooltipStringY(dataPoint) {
@@ -23,12 +22,11 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
     }
     getMagnitudeScale() {
         var xDomain = this.getXDomain();
-        return this.vectorScale * this.width / (xDomain[1].getTime() - xDomain[0].getTime());
+        return this.vectorScale * this.width / (xDomain[1].valueOf() - xDomain[0].valueOf());
     }
-    //Due to the  wrong reference this can throw exception
     drawCanvas() {
         this.updateScaleText();
-        this.drawCanvas.call(this);
+        CTP.prototype.drawCanvas.call(this);
     }
     drawDataSet(dataIndex) {
         var d = this.data[dataIndex];
@@ -90,7 +88,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
         if (this.disableLegend) {
             return;
         }
-        this.updateLegend.call(this);
+        CDP.prototype.updateLegend.call(this);
         if (!this.legend) {
             return;
         }

@@ -8,7 +8,8 @@ export class CanvasDataPlot{
 	parent: d3.Selection<any, {} , HTMLElement , {}>;
 	canvasDimensions: Array<number>;
 	config: CanvasDataPlot.Config;
-	data : Array<Array<[Date, number]>>;
+  data : Array<[Date, number]>
+	// data: Array<any>
 	dataIDs: Array<string>;
 	dataLabels: Array<string>;
 	displayIndexStart: Array<number>; 
@@ -109,9 +110,9 @@ export class CanvasDataPlot{
 
 		//Append to the selected HTMLElement a div with the listed properties
         this.div = this.parent.append("div")
-	   	    .attr("class", "cvpChart")
+	   	  .attr("class", "cvpChart")
 		    .style("width", this.totalWidth + "px")
-		    .style("width", this.totalHeight + "px")
+		    .style("height", this.totalHeight + "px")
 
 	   this.d3Canvas = this.div.append("canvas")
 		   .attr("class", "cvpCanvas")
@@ -190,7 +191,7 @@ export class CanvasDataPlot{
 
 	addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[Date, number]>, colorString?: string,
 		 updateDomains?: boolean, copyData?: boolean) : void{
-    	this.dataIDs.push(uniqueID);
+    this.dataIDs.push(uniqueID);
 		this.dataLabels.push(label);
 		this.dataColors.push(colorString);
 		this.displayIndexStart.push(0);
@@ -224,20 +225,20 @@ export class CanvasDataPlot{
 
 
     addDataPoint(uniqueID?: string, dataPoint?: [Date, number], updateDomains?: boolean, copyData?: boolean): void {
-		let i: number = this.dataIDs.indexOf(uniqueID);
-		if(i < 0 || (this.data[i].length > 0 && this.data[i][this.data[i].length-1][0] > dataPoint[0])) {
-			return;
-		}
-		this.data[i].push(copyData ? jQuery.extend(true, {}, dataPoint) : dataPoint);
+			let i: number = this.dataIDs.indexOf(uniqueID);
+			if(i < 0 || (this.data[i].length > 0 && this.data[i][this.data[i].length-1][0] > dataPoint[0])) {
+				return;
+			}
+			this.data[i].push(copyData ? jQuery.extend(true, {}, dataPoint) : dataPoint);
 		
-		if(updateDomains) {
-			this.updateDomains(this.calculateXDomain(), this.calculateYDomain(), true);
+			if(updateDomains) {
+				this.updateDomains(this.calculateXDomain(), this.calculateYDomain(), true);
+			}
+			else {
+				this.updateDisplayIndices();
+				this.drawCanvas();
+			}
 		}
-		else {
-			this.updateDisplayIndices();
-			this.drawCanvas();
-		}
-	}
 
 
 
@@ -589,23 +590,23 @@ export class CanvasDataPlot{
 		var nDataSets = this.data.length;
 		for(var i=0; i<nDataSets; ++i) {
 			this.drawDataSet(i);
-		}
+			}
 	}
 
 
 	 
 	drawGrid() {
-		this.canvas.lineWidth = 1;
+		this.canvas.lineWidth = 0.9;
 		this.canvas.strokeStyle = this.gridColor;
-		this.canvas.beginPath(); 
-		for (var i = 1; i <=  Math.floor(this.width/40); i++) {
+		this.canvas.beginPath();
+		for (var i = 1; i <=  Math.floor(this.width); i++) {
 			var x = (i * 50);
 			this.canvas.moveTo(0, x);
 			this.canvas.lineTo(this.width, x);						
 		}
 
-		for (var j = 1; j <=  Math.floor(this.height/40); j++) {
-			var y = (j * 50);
+		for (var j = 1; j <=  Math.floor(this.height); j++) {
+			var y = (j * 100);
 			this.canvas.moveTo(y, 0);
 			this.canvas.lineTo(y, this.height);						
 		}
@@ -614,7 +615,9 @@ export class CanvasDataPlot{
 
 	}
 
-
+convertRange( value: any, r1: Array<number>, r2: Array<number> ): number{ 
+    return ( value - r1[ 0 ] ) * ( r2[ 1 ] - r2[ 0 ] ) / ( r1[ 1 ] - r1[ 0 ] ) + r2[ 0 ];
+}
 	
 drawDataSet(dataIndex: number): void {
 	var d = this.data[dataIndex];
@@ -627,12 +630,18 @@ drawDataSet(dataIndex: number): void {
 
 	this.canvas.strokeStyle = this.dataColors[dataIndex];
 	this.canvas.lineWidth = this.markerLineWidth;
+	// this.canvas.beginPath();
+	// this.canvas.arc(1000, 1000, 5, 0, 2 * Math.PI);
+	// this.canvas.stroke();
+	console.log(this.markerRadius)
 	for(var i=iStart; i<=iLast; ++i) {
 		this.canvas.beginPath();
-		this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]),
-			this.markerRadius, 0, 2*Math.PI);
+		
+		console.log(this.convertRange(d[i][0].getDate()*10, [10,800],[10,900])+" ,"+this.convertRange(d[i][1], [10,800],[10,900]))
+		this.canvas.arc(this.convertRange(d[i][0].getDate()*10, [10,800],[10,900]), this.convertRange(d[i][1], [10,800],[10,900]),	this.markerRadius, 0, 2*Math.PI);
 		this.canvas.stroke();
 	}
+
 }
 
 
