@@ -1,6 +1,5 @@
-import { CanvasTimeSeriesPlot as CTP } from './CanvasTimeSeriesPlot';
-import { CanvasDataPlot as CDP } from './CanvasDataPlot';
-export class CanvasVectorSeriesPlot extends CTP {
+import { CanvasTimeSeriesPlot } from './CanvasTimeSeriesPlot';
+export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
     constructor(parentElement, canvasDimensions, config = {}) {
         super(parentElement, canvasDimensions, config);
         this.vectorScale = config.vectorScale || 2.0e5;
@@ -8,10 +7,12 @@ export class CanvasVectorSeriesPlot extends CTP {
         this.scaleLength = config.scaleLength || 75;
         this.scaleTextElem = null;
         var configCopy = this.CanvasPlot_shallowObjectCopy(config);
-        configCopy["showTooltips"] = true;
+        //configCopy["showTooltips"] = false;
         if (!("invertYAxis" in configCopy)) {
             configCopy["invertYAxis"] = true;
         }
+        CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
+        //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
     }
     // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
     getTooltipStringY(dataPoint) {
@@ -22,11 +23,12 @@ export class CanvasVectorSeriesPlot extends CTP {
     }
     getMagnitudeScale() {
         var xDomain = this.getXDomain();
-        return this.vectorScale * this.width / (xDomain[1].valueOf() - xDomain[0].valueOf());
+        return this.vectorScale * this.width / (xDomain[1].getTime() - xDomain[0].getTime());
     }
+    //Due to the  wrong reference this can throw exception
     drawCanvas() {
         this.updateScaleText();
-        CTP.prototype.drawCanvas.call(this);
+        this.drawCanvas.call(this);
     }
     drawDataSet(dataIndex) {
         var d = this.data[dataIndex];
@@ -88,7 +90,7 @@ export class CanvasVectorSeriesPlot extends CTP {
         if (this.disableLegend) {
             return;
         }
-        CDP.prototype.updateLegend.call(this);
+        this.updateLegend.call(this);
         if (!this.legend) {
             return;
         }

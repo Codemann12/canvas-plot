@@ -82,7 +82,6 @@ export declare class CanvasDataPlot {
     redrawCanvasAndAxes(): void;
     drawCanvas(): void;
     drawGrid(): void;
-    convertRange(value: any, r1: Array<number>, r2: Array<number>): number;
     drawDataSet(dataIndex: number): void;
     resetZoomListenerAxes(): void;
     updateZoomValues(scale: number, translate: number): void;

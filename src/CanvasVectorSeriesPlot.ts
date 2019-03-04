@@ -1,8 +1,8 @@
-import {CanvasTimeSeriesPlot as CTP } from './CanvasTimeSeriesPlot'
-import {CanvasDataPlot as CDP} from './CanvasDataPlot'
+import {CanvasTimeSeriesPlot} from './CanvasTimeSeriesPlot'
+import {CanvasDataPlot} from './CanvasDataPlot'
 
 
-export class CanvasVectorSeriesPlot extends CTP{
+export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
     vectorScale: number;
     scaleUnits: string;
     scaleLength: number;
@@ -10,7 +10,7 @@ export class CanvasVectorSeriesPlot extends CTP{
     scaleTextElem: any;
    
 	
-	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CDP.Config = {}){
+	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
         super(parentElement, canvasDimensions, config);
         this.vectorScale = config.vectorScale || 2.0e5;
         this.scaleUnits = config.scaleUnits || "units";
@@ -18,10 +18,14 @@ export class CanvasVectorSeriesPlot extends CTP{
         this.scaleTextElem = null;
         
         var configCopy = this.CanvasPlot_shallowObjectCopy(config);
-        configCopy["showTooltips"] = true;
+        //configCopy["showTooltips"] = false;
         if(!("invertYAxis" in configCopy)) {
             configCopy["invertYAxis"] = true;
         }
+        
+        CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
+        //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+        
     }
 
     // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
@@ -35,13 +39,13 @@ export class CanvasVectorSeriesPlot extends CTP{
 
     getMagnitudeScale(): number {
         var xDomain = this.getXDomain();
-        return this.vectorScale * this.width /(xDomain[1].valueOf()  -xDomain[0].valueOf());
+        return this.vectorScale * this.width / (xDomain[1].getTime() - xDomain[0].getTime());
     }
     
-    
+    //Due to the  wrong reference this can throw exception
     drawCanvas(): void{
         this.updateScaleText();
-        CTP.prototype.drawCanvas.call(this); 
+        this.drawCanvas.call(this); 
     }
 
     drawDataSet(dataIndex: number): void{ 
@@ -92,6 +96,7 @@ export class CanvasVectorSeriesPlot extends CTP{
                 startY-((mag-tipSize)*sinDir - 0.5*tipSize*cosDir));
                 this.canvas.stroke();
         }
+
     }
 
     updateScaleText(): void{
@@ -116,7 +121,7 @@ export class CanvasVectorSeriesPlot extends CTP{
         if(this.disableLegend) {
             return;
         }
-        CDP.prototype.updateLegend.call(this);
+        this.updateLegend.call(this);
     
         if(!this.legend) {
             return;
