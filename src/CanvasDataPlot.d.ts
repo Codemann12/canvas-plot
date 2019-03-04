@@ -62,8 +62,8 @@ export declare class CanvasDataPlot {
     setZoomXAxis(zoomX: boolean): void;
     setZoomYAxis(zoomY: boolean): void;
     resize(dimensions: Array<number>): void;
-    updateDomains(xDomain: Array<Date>, yDomain: Array<number>, makeItNice: boolean): void;
-    getXDomain(): Array<Date>;
+    updateDomains(xDomain: Array<any>, yDomain: Array<number>, makeItNice: boolean): void;
+    getXDomain(): Array<any>;
     getYDomain(): Array<number>;
     calculateXDomain(): any;
     calculateYDomain(): any;

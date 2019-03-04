@@ -463,17 +463,9 @@ export class CanvasDataPlot {
         var iLast = Math.min(d.length - 1, iEnd + 1);
         this.canvas.strokeStyle = this.dataColors[dataIndex];
         this.canvas.lineWidth = this.markerLineWidth;
-        // this.canvas.beginPath();
-        // this.canvas.arc(1000, 1000, 5, 0, 2 * Math.PI);
-        // this.canvas.stroke();
-        console.log(this.markerRadius);
         for (var i = iStart; i <= iLast; ++i) {
             this.canvas.beginPath();
-            if (Number(d[i][0]) < 0) {
-                d[i][0] = Number(d[i][0]) * -1;
-            }
-            console.log(this.convertRange(d[i][0], [10, 800], [10, 900]) + " ," + this.convertRange(d[i][1], [10, 800], [10, 900]));
-            this.canvas.arc(this.convertRange(d[i][0], [10, 800], [10, 900]), this.convertRange(d[i][1] * 10, [10, 800], [10, 900]), this.markerRadius, 0, 2 * Math.PI);
+            this.canvas.arc(this.xScale(d[i][0]) * 40, this.yScale(d[i][1]) * 40, this.markerRadius, 0, 2 * Math.PI);
             this.canvas.stroke();
         }
     }

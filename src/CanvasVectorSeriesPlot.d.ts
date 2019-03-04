@@ -1,12 +1,12 @@
-import { CanvasTimeSeriesPlot } from './CanvasTimeSeriesPlot';
-import { CanvasDataPlot } from './CanvasDataPlot';
-export declare class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
+import { CanvasTimeSeriesPlot as CTS } from './CanvasTimeSeriesPlot';
+import { CanvasDataPlot as CDP } from './CanvasDataPlot';
+export declare class CanvasVectorSeriesPlot extends CTS {
     vectorScale: number;
     scaleUnits: string;
     scaleLength: number;
     showMarkerDensity: number;
     scaleTextElem: any;
-    constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CanvasDataPlot.Config);
+    constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CDP.Config);
     getTooltipStringY(dataPoint: [Date, number]): string;
     getMagnitudeScale(): number;
     drawCanvas(): void;

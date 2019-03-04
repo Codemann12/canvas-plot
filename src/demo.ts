@@ -22,13 +22,14 @@ function randomDate(): Date {
 }
 
 $(document).ready( function(){
-        var data1: Array<[any, number]> = [[-1,5], [0.5,6], [5,-2.5], [6,1], [10,9], [20,-55]];
-        var data2: Array<[any, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
-        [randomDate(),Math.floor(Math.random() * 100)],
-        [randomDate(),Math.floor(Math.random() * 100)],
-        [randomDate(),Math.floor(Math.random() * 100)],
-        [randomDate(),Math.floor(Math.random() * 100)],
-        [randomDate(),Math.floor(Math.random() * 100)]];
+        var data1: Array<[any, number]> = [[1,5], [0.5,6], [5,25], [6,1], [10,9],
+                             [20,55], [10,25], [15,25], [16,19], [10,89], [20,55],[18,5], [15,6], [5,25]];
+        // var data2: Array<[any, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
+        // [randomDate(),Math.floor(Math.random() * 100)],
+        // [randomDate(),Math.floor(Math.random() * 100)],
+        // [randomDate(),Math.floor(Math.random() * 100)],
+        // [randomDate(),Math.floor(Math.random() * 100)],
+        // [randomDate(),Math.floor(Math.random() * 100)]];
     
         var plot1 = new CanvasDataPlot(d3.select("#maincontainer"), [1000, 900], {
 		xAxisLabel: "IQ",
@@ -39,10 +40,10 @@ $(document).ready( function(){
 
 
     plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);   
-    plot1.addDataPoint("ds1", [randomDate(),0]);   
-    plot1.addDataPoint("ds1", [randomDate(),10]);
-    plot1.addDataPoint("ds1", [randomDate(),0]);
-    plot1.updateDomains([randomDate(), randomDate()], [-60,15], true);
+	plot1.addDataPoint("ds1", [15,0]); // Will not be added! (x values have to be in ascending order)
+	plot1.addDataPoint("ds1", [20,10]); // Will be added.
+	plot1.addDataPoint("ds1", [21,0]);
+	plot1.updateDomains([-2,22], [-60,15], true);
 // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
 
 

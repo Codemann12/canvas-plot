@@ -1,8 +1,8 @@
-import {CanvasTimeSeriesPlot} from './CanvasTimeSeriesPlot'
-import {CanvasDataPlot} from './CanvasDataPlot'
+import {CanvasTimeSeriesPlot as CTS} from './CanvasTimeSeriesPlot'
+import {CanvasDataPlot as CDP} from './CanvasDataPlot'
 
 
-export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
+export class CanvasVectorSeriesPlot extends CTS{
     vectorScale: number;
     scaleUnits: string;
     scaleLength: number;
@@ -10,7 +10,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
     scaleTextElem: any;
    
 	
-	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CanvasDataPlot.Config = {}){
+	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CDP.Config = {}){
         super(parentElement, canvasDimensions, config);
         this.vectorScale = config.vectorScale || 2.0e5;
         this.scaleUnits = config.scaleUnits || "units";
@@ -22,9 +22,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
         if(!("invertYAxis" in configCopy)) {
             configCopy["invertYAxis"] = true;
         }
-        
-        CanvasTimeSeriesPlot.call(this, parentElement, canvasDimensions, configCopy);
-        //Object.setPrototypeOf(CanvasVectorSeriesPlot.prototype, Object.create(CanvasTimeSeriesPlot.prototype));
+
         
     }
 
@@ -39,13 +37,13 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
 
     getMagnitudeScale(): number {
         var xDomain = this.getXDomain();
-        return this.vectorScale * this.width / (xDomain[1].getTime() - xDomain[0].getTime());
+        return this.vectorScale * this.width / (xDomain[1] - xDomain[0]);
     }
     
-    //Due to the  wrong reference this can throw exception
+ 
     drawCanvas(): void{
         this.updateScaleText();
-        this.drawCanvas.call(this); 
+        CTS.prototype.drawCanvas.call(this); 
     }
 
     drawDataSet(dataIndex: number): void{ 
@@ -121,7 +119,7 @@ export class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot{
         if(this.disableLegend) {
             return;
         }
-        this.updateLegend.call(this);
+        CDP.prototype.updateLegend.call(this);
     
         if(!this.legend) {
             return;

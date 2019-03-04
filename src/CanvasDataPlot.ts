@@ -314,7 +314,7 @@ export class CanvasDataPlot{
 	}
 
 
-	updateDomains(xDomain: Array<Date>, yDomain: Array<number>, makeItNice: boolean): void {
+	updateDomains(xDomain: Array<any>, yDomain: Array<number>, makeItNice: boolean): void {
 		this.xScale = d3.scaleLinear().domain(xDomain);
 		this.yScale = d3.scaleLinear().domain(yDomain);
 		if(makeItNice) {
@@ -328,7 +328,7 @@ export class CanvasDataPlot{
 	}
 	
 
-	getXDomain(): Array<Date> {
+	getXDomain(): Array<any> {
 		return this.xScale.domain();
 	}
 	
@@ -369,7 +369,7 @@ export class CanvasDataPlot{
 
     
 	calculateYDomain(): any{
-		let nonEmptySets: Array<Array<[Date,number]>> = [];
+		let nonEmptySets: Array<Array<[any,number]>> = [];
 		this.data.forEach(function(ds) {
 			if(ds && ds.length > 0) {
 				nonEmptySets.push(ds);
@@ -628,21 +628,12 @@ drawDataSet(dataIndex: number): void {
 	var iLast = Math.min(d.length-1 , iEnd+1);
 
 	this.canvas.strokeStyle = this.dataColors[dataIndex];
-	this.canvas.lineWidth = this.markerLineWidth;
-	// this.canvas.beginPath();
-	// this.canvas.arc(1000, 1000, 5, 0, 2 * Math.PI);
-	// this.canvas.stroke();
-	console.log(this.markerRadius)
-	for(var i=iStart; i<=iLast; ++i) {
-		this.canvas.beginPath();
-		if (Number(d[i][0])<0){
-			d[i][0] = Number(d[i][0])*-1
+	this.canvas.lineWidth = this.markerLineWidth;	
+  for(var i=iStart; i<=iLast; ++i) {
+			this.canvas.beginPath();
+			this.canvas.arc(this.xScale(d[i][0])*40, this.yScale(d[i][1])*40,	this.markerRadius, 0, 2*Math.PI);
+			this.canvas.stroke();
 		}
-		console.log(this.convertRange(d[i][0], [10,800],[10,900])+" ,"+this.convertRange(d[i][1], [10,800],[10,900]))
-		this.canvas.arc(this.convertRange(d[i][0], [10,800],[10,900]), this.convertRange(d[i][1]*10, [10,800],[10,900]),	this.markerRadius, 0, 2*Math.PI);
-		this.canvas.stroke();
-	}
-
 }
 
 
