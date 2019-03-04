@@ -40,7 +40,7 @@ export class CanvasDataPlot {
         this.div = this.parent.append("div")
             .attr("class", "cvpChart")
             .style("width", this.totalWidth + "px")
-            .style("width", this.totalHeight + "px");
+            .style("height", this.totalHeight + "px");
         this.d3Canvas = this.div.append("canvas")
             .attr("class", "cvpCanvas")
             .attr("width", this.width)
@@ -434,21 +434,24 @@ export class CanvasDataPlot {
         }
     }
     drawGrid() {
-        this.canvas.lineWidth = 1;
+        this.canvas.lineWidth = 0.9;
         this.canvas.strokeStyle = this.gridColor;
         this.canvas.beginPath();
-        for (var i = 1; i <= Math.floor(this.width / 40); i++) {
+        for (var i = 1; i <= Math.floor(this.width); i++) {
             var x = (i * 50);
             this.canvas.moveTo(0, x);
             this.canvas.lineTo(this.width, x);
         }
-        for (var j = 1; j <= Math.floor(this.height / 40); j++) {
-            var y = (j * 50);
+        for (var j = 1; j <= Math.floor(this.height); j++) {
+            var y = (j * 100);
             this.canvas.moveTo(y, 0);
             this.canvas.lineTo(y, this.height);
         }
         this.canvas.stroke();
         this.canvas.closePath();
+    }
+    convertRange(value, r1, r2) {
+        return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
     }
     drawDataSet(dataIndex) {
         var d = this.data[dataIndex];
@@ -460,9 +463,17 @@ export class CanvasDataPlot {
         var iLast = Math.min(d.length - 1, iEnd + 1);
         this.canvas.strokeStyle = this.dataColors[dataIndex];
         this.canvas.lineWidth = this.markerLineWidth;
+        // this.canvas.beginPath();
+        // this.canvas.arc(1000, 1000, 5, 0, 2 * Math.PI);
+        // this.canvas.stroke();
+        console.log(this.markerRadius);
         for (var i = iStart; i <= iLast; ++i) {
             this.canvas.beginPath();
-            this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]), this.markerRadius, 0, 2 * Math.PI);
+            if (Number(d[i][0]) < 0) {
+                d[i][0] = Number(d[i][0]) * -1;
+            }
+            console.log(this.convertRange(d[i][0], [10, 800], [10, 900]) + " ," + this.convertRange(d[i][1], [10, 800], [10, 900]));
+            this.canvas.arc(this.convertRange(d[i][0], [10, 800], [10, 900]), this.convertRange(d[i][1] * 10, [10, 800], [10, 900]), this.markerRadius, 0, 2 * Math.PI);
             this.canvas.stroke();
         }
     }

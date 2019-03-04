@@ -36,7 +36,7 @@ export class CanvasDataPlotGroup {
             this.defaultConfig["updateViewCallback"] = (this.multiplePlots ? (this.setViews).bind(this) : null);    
     }
 
-    addDataSet(plotType: string, uniqueID: string, displayName: string, dataSet: Array<[Date, number]> , color: string, plotConfig: CanvasDataPlot.Config): void {
+    addDataSet(plotType: string, uniqueID: string, displayName: string, dataSet: Array<[any, number]> , color: string, plotConfig: CanvasDataPlot.Config): void {
         if(this.multiplePlots || this.plots.length < 1) {
             var config: CanvasDataPlot.Config = null;
          if(<any>plotConfig) {

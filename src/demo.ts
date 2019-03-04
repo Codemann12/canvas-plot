@@ -22,7 +22,8 @@ function randomDate(): Date {
 }
 
 $(document).ready( function(){
-        var data1: Array<[Date, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
+        var data1: Array<[any, number]> = [[-1,5], [0.5,6], [5,-2.5], [6,1], [10,9], [20,-55]];
+        var data2: Array<[any, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
         [randomDate(),Math.floor(Math.random() * 100)],
         [randomDate(),Math.floor(Math.random() * 100)],
         [randomDate(),Math.floor(Math.random() * 100)],

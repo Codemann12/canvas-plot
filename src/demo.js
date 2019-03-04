@@ -16,7 +16,8 @@ function randomDate() {
     return new Date(new Date(2012, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2012, 0, 1).getTime()));
 }
 $(document).ready(function () {
-    var data1 = [[randomDate(), Math.floor(Math.random() * 100)],
+    var data1 = [[-1, 5], [0.5, 6], [5, -2.5], [6, 1], [10, 9], [20, -55]];
+    var data2 = [[randomDate(), Math.floor(Math.random() * 100)],
         [randomDate(), Math.floor(Math.random() * 100)],
         [randomDate(), Math.floor(Math.random() * 100)],
         [randomDate(), Math.floor(Math.random() * 100)],

@@ -4,7 +4,7 @@ export declare class CanvasDataPlot {
     parent: d3.Selection<any, {}, HTMLElement, {}>;
     canvasDimensions: Array<number>;
     config: CanvasDataPlot.Config;
-    data: Array<Array<[Date, number]>>;
+    data: Array<Array<[any, number]>>;
     dataIDs: Array<string>;
     dataLabels: Array<string>;
     displayIndexStart: Array<number>;
@@ -56,8 +56,8 @@ export declare class CanvasDataPlot {
     yAxisZoom: boolean;
     constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CanvasDataPlot.Config);
     zoomFunction(): void;
-    addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[Date, number]>, colorString?: string, updateDomains?: boolean, copyData?: boolean): void;
-    addDataPoint(uniqueID?: string, dataPoint?: [Date, number], updateDomains?: boolean, copyData?: boolean): void;
+    addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[any, number]>, colorString?: string, updateDomains?: boolean, copyData?: boolean): void;
+    addDataPoint(uniqueID?: string, dataPoint?: [any, number], updateDomains?: boolean, copyData?: boolean): void;
     removeDataSet(uniqueID: string): void;
     setZoomXAxis(zoomX: boolean): void;
     setZoomYAxis(zoomY: boolean): void;
@@ -82,6 +82,7 @@ export declare class CanvasDataPlot {
     redrawCanvasAndAxes(): void;
     drawCanvas(): void;
     drawGrid(): void;
+    convertRange(value: any, r1: Array<number>, r2: Array<number>): number;
     drawDataSet(dataIndex: number): void;
     resetZoomListenerAxes(): void;
     updateZoomValues(scale: number, translate: number): void;

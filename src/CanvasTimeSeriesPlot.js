@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import { CanvasDataPlot } from './CanvasDataPlot';
 export class CanvasTimeSeriesPlot extends CanvasDataPlot {
     constructor(parentElement, canvasDimensions, config = {}) {
-        super(parentElement = null, canvasDimensions, config);
+        super(parentElement = null, canvasDimensions, config); // modify the CanvasPlot Constructor to avoid this setting.
         config = config || {};
         this.informationDensity = [];
         this.plotLineWidth = config.plotLineWidth || 1;
