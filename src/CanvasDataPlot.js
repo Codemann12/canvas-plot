@@ -230,7 +230,6 @@ export class CanvasDataPlot {
             }
         });
         if (nonEmptySets.length < 1) {
-            //return [new Date("2019-02-24"), new Date()]; 
             return [0, 1];
         }
         var min = nonEmptySets[0][0][0];
@@ -242,10 +241,15 @@ export class CanvasDataPlot {
             max = max < maxCandidate ? maxCandidate : max;
         }
         if (max - min <= 0) {
-            min.setTime((1000 * 60 * 60 * 24) * max.getTime());
-            max.setTime(min.getTime() + (1000 * 60 * 60 * 24));
+            min = 1 * max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
+            max = min + 1;
         }
         return [min, max];
+        // if(<any>max - <any>min <= 0) {
+        // 	min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
+        // 	max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
+        // }
+        // return [min, max];
     }
     calculateYDomain() {
         let nonEmptySets = [];
@@ -276,7 +280,8 @@ export class CanvasDataPlot {
         this.xScale = d3.scaleLinear()
             .domain(this.calculateXDomain())
             .range([0, this.width])
-            .nice();
+            .nice()
+            .clamp(true);
         this.xAxis = d3.axisBottom(this.xScale)
             .ticks(Math.round(this.xTicksPerPixel * this.width));
     }
@@ -284,7 +289,8 @@ export class CanvasDataPlot {
         this.yScale = d3.scaleLinear()
             .domain(this.calculateYDomain())
             .range(this.invertYAxis ? [0, this.height] : [this.height, 0])
-            .nice();
+            .nice()
+            .clamp(true);
         this.yAxis = d3.axisLeft(this.yScale)
             .ticks(Math.round(this.yTicksPerPixel * this.height));
     }
@@ -452,6 +458,9 @@ export class CanvasDataPlot {
     }
     convertRange(value, r1, r2) {
         return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
+    }
+    randomIntFromInterval(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
     }
     drawDataSet(dataIndex) {
         var d = this.data[dataIndex];

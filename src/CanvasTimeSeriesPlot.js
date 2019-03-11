@@ -35,7 +35,7 @@ export class CanvasTimeSeriesPlot extends CDP {
             this.informationDensity[i] = iLength / scaleLength;
         }
     }
-    updateTooltipn() {
+    updateTooltip() {
         var mouse = d3.mouse(this.div.node());
         var mx = mouse[0] - this.margin.left;
         var my = mouse[1] - this.margin.top;
@@ -81,10 +81,11 @@ export class CanvasTimeSeriesPlot extends CDP {
         return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
     }
     setupXScaleAndAxis() {
-        this.xScale = d3.scaleTime()
+        this.xScalet = d3.scaleTime()
             .domain(this.calculateXDomain())
             .range([0, this.width])
-            .nice();
+            .nice()
+            .clamp(true);
         var formatMilliSecond = d3.timeFormat(".%L"), formatSecond = d3.timeFormat(":%S"), formatHour = d3.timeFormat("%I:%p"), formatWeek = d3.timeFormat("%b %d"), formatMonth = d3.timeFormat("%B"), formatYear = d3.timeFormat("%Y");
         let multiFormat = (date) => {
             return (d3.timeSecond(date) < date ? formatMilliSecond
@@ -94,7 +95,7 @@ export class CanvasTimeSeriesPlot extends CDP {
                             : d3.timeYear(date) < date ? formatMonth
                                 : formatYear)(date);
         };
-        this.xAxis = d3.axisBottom(this.xScale)
+        this.xAxis = d3.axisBottom(this.xScalet)
             .tickFormat(multiFormat)
             .ticks(Math.round(this.xTicksPerPixel * this.width));
     }
@@ -103,6 +104,7 @@ export class CanvasTimeSeriesPlot extends CDP {
         if (d.length < 1) {
             return;
         }
+        console.log(this.calculateXDomain());
         var iStart = this.displayIndexStart[dataIndex];
         var iEnd = this.displayIndexEnd[dataIndex];
         var informationDensity = this.informationDensity[dataIndex];
@@ -110,10 +112,12 @@ export class CanvasTimeSeriesPlot extends CDP {
         if (informationDensity > this.maxInformationDensity) {
             drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
         }
-        // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
+        //Make iStart divisivble by drawEvery to prevent flickering graphs while panning
         iStart = Math.max(0, iStart - iStart % drawEvery);
         this.canvas.beginPath();
         this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
+        console.log(d[iStart][0]);
+        console.log(this.xScalet(d[iStart][0]));
         for (var i = iStart; i <= iEnd; i = i + drawEvery) {
             this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
         }

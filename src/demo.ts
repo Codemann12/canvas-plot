@@ -22,14 +22,10 @@ function randomDate(): Date {
 }
 
 $(document).ready( function(){
-        var data1: Array<[any, number]> = [[1,5], [0.5,6], [5,25], [6,1], [10,9],
-                             [20,55], [10,25], [15,25], [16,19], [10,89], [20,55],[18,5], [15,6], [5,25]];
-        // var data2: Array<[any, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
-        // [randomDate(),Math.floor(Math.random() * 100)],
-        // [randomDate(),Math.floor(Math.random() * 100)],
-        // [randomDate(),Math.floor(Math.random() * 100)],
-        // [randomDate(),Math.floor(Math.random() * 100)],
-        // [randomDate(),Math.floor(Math.random() * 100)]];
+        var data1: Array<[any, number]> =
+           [[1,5], [0.5,6], [5,25], [6,1], [10,9],
+            [20,55], [10,32], [15,25], [16,19], [10,89],
+            [27,56],[18,5], [15,6], [72,41]];
     
         var plot1 = new CanvasDataPlot(d3.select("#maincontainer"), [1000, 900], {
 		xAxisLabel: "IQ",
@@ -47,7 +43,6 @@ $(document).ready( function(){
 // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
 
 
-
 var ts1: Array<[Date, number]> = [];
 var ts2: Array<[Date, number]> = [];
 var now = new Date();
@@ -57,6 +52,7 @@ for(var i=0; i<100; ++i) {
     ts1.push([time, Math.random()]);
     ts2.push([time, Math.random()]);
 }
+
 
 
 var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), getDemoPlotSize(), {
@@ -70,6 +66,7 @@ plot2.setZoomYAxis(false);
 $(window).resize(function() {
     plot2.resize(getDemoPlotSize());
 });
+
 var time = new Date(now);
 time.setHours(101);
 var newDataPoint:[Date, number] = [time, 1.5];
@@ -77,7 +74,7 @@ plot2.addDataPoint("ds1", newDataPoint, true, true);
 newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
 
 
-var tsPlotGroup = new CanvasDataPlotGroup(d3.select("#maincontainer"), [550, 350], true, true, {});
+var tsPlotGroup = new CanvasDataPlotGroup(d3.select("#maincontainer"), getDemoPlotSize(), true, true, {});
 tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
     yAxisLabel: "Voltage [V]"
 });

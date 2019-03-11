@@ -7,6 +7,7 @@ export class CanvasTimeSeriesPlot extends CDP{
     plotLineWidth: number;
     maxInformationDensity: number;
     showMarkerDensity: number;
+    
 	
 	constructor(parentElement: d3.Selection<any, {} , HTMLElement , {}>, canvasDimensions: Array<number>, config: CDP.Config = {}){
         super(parentElement , canvasDimensions, config); 
@@ -51,7 +52,7 @@ export class CanvasTimeSeriesPlot extends CDP{
     }
 
 
-    updateTooltipn(): void{
+    updateTooltip(): void{
         var mouse = d3.mouse(this.div.node());
         var mx = mouse[0] - this.margin.left;
         var my = mouse[1] - this.margin.top;
@@ -106,12 +107,13 @@ export class CanvasTimeSeriesPlot extends CDP{
 
     
     setupXScaleAndAxis() {
-            this.xScale = d3.scaleTime()
-            .domain(this.calculateXDomain())
-            .range([0, this.width])
-            .nice();
+        var xScale = d3.scaleTime()
+        .domain(this.calculateXDomain())
+        .range([0, this.width])
+        .nice()
+        .clamp(true);
     
-        
+
         var formatMilliSecond = d3.timeFormat(".%L"),
             formatSecond = d3.timeFormat(":%S"),
             formatHour = d3.timeFormat("%I:%p"),
@@ -128,19 +130,21 @@ export class CanvasTimeSeriesPlot extends CDP{
             : d3.timeYear(date) < date ? formatMonth
             : formatYear)(date);
         }
-        
+
     
-        this.xAxis = d3.axisBottom(this.xScale)
+        this.xAxis = d3.axisBottom(xScale)
             .tickFormat(multiFormat)
             .ticks(Math.round(this.xTicksPerPixel*this.width));
     }
 
 
     drawDataSet(dataIndex: number): void{
-        var d = this.data[dataIndex];
+        var d =<Array<[Date, number]>> this.data[dataIndex];    
         if(d.length < 1) {
             return;
         }
+  
+        console.log(this.calculateXDomain())
         var iStart = this.displayIndexStart[dataIndex];
         var iEnd = this.displayIndexEnd[dataIndex];
         var informationDensity = this.informationDensity[dataIndex];
@@ -150,34 +154,31 @@ export class CanvasTimeSeriesPlot extends CDP{
             drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
         }
     
-        // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
+        //Make iStart divisivble by drawEvery to prevent flickering graphs while panning
         iStart = Math.max(0, iStart - iStart%drawEvery);
-    
+        
+       
         this.canvas.beginPath();
         this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
+        console.log(d[iStart][0])
+        console.log(xScale(d[iStart][0]))
         for(var i=iStart; i<=iEnd; i=i+drawEvery) {
-            this.canvas.lineTo(this.xScale(d[i][0]),
-            this.yScale(d[i][1]));
+            this.canvas.lineTo(this.xScale(d[i][0]),  this.yScale(d[i][1]));
         }
+        
         var iLast = Math.min(d.length-1 , iEnd+drawEvery);
-        this.canvas.lineTo(this.xScale(d[iLast][0]),
-        this.yScale(d[iLast][1]));
+       
+        this.canvas.lineTo(this.xScale(d[iLast][0]), this.yScale(d[iLast][1]));
         this.canvas.lineWidth = this.plotLineWidth;
         this.canvas.strokeStyle = this.dataColors[dataIndex];
         this.canvas.stroke();
-    
         if(informationDensity <= this.showMarkerDensity) {
             this.canvas.lineWidth = this.markerLineWidth;
             for(var i=iStart; i<=iLast; ++i) {
                 this.canvas.beginPath();
-                this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]),
-                    this.markerRadius, 0, 2*Math.PI);
+                this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]), this.markerRadius, 0, 2*Math.PI);
                 this.canvas.stroke();
             }
         }
     }
-    
-	
 }
-
-

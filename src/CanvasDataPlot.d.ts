@@ -65,7 +65,7 @@ export declare class CanvasDataPlot {
     updateDomains(xDomain: Array<any>, yDomain: Array<number>, makeItNice: boolean): void;
     getXDomain(): Array<any>;
     getYDomain(): Array<number>;
-    calculateXDomain(): any;
+    calculateXDomain(): Array<any>;
     calculateYDomain(): any;
     destroy(): void;
     setupXScaleAndAxis(): void;
@@ -83,6 +83,7 @@ export declare class CanvasDataPlot {
     drawCanvas(): void;
     drawGrid(): void;
     convertRange(value: any, r1: Array<number>, r2: Array<number>): number;
+    randomIntFromInterval(min: number, max: number): number;
     drawDataSet(dataIndex: number): void;
     resetZoomListenerAxes(): void;
     updateZoomValues(scale: number, translate: number): void;

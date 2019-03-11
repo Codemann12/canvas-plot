@@ -140,11 +140,7 @@ export class CanvasVectorSeriesPlot extends CTS{
                 .attr("x", 2*this.legendXPadding + this.scaleLength)
                 .attr("y", newHeight - this.legendYPadding);
         this.updateScaleText();
-    }
-
-
-   
-	
+    }	
 }
 
 

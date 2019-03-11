@@ -4802,8 +4802,6 @@
   var saturday = weekday(6);
 
   var sundays = sunday.range;
-  var mondays = monday.range;
-  var thursdays = thursday.range;
 
   var month = newInterval(function(date) {
     date.setDate(1);
@@ -4893,8 +4891,6 @@
   var utcSaturday = utcWeekday(6);
 
   var utcSundays = utcSunday.range;
-  var utcMondays = utcMonday.range;
-  var utcThursdays = utcThursday.range;
 
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
@@ -6941,7 +6937,6 @@
               }
           });
           if (nonEmptySets.length < 1) {
-              //return [new Date("2019-02-24"), new Date()]; 
               return [0, 1];
           }
           var min$$1 = nonEmptySets[0][0][0];
@@ -6953,10 +6948,15 @@
               max$$1 = max$$1 < maxCandidate ? maxCandidate : max$$1;
           }
           if (max$$1 - min$$1 <= 0) {
-              min$$1.setTime((1000 * 60 * 60 * 24) * max$$1.getTime());
-              max$$1.setTime(min$$1.getTime() + (1000 * 60 * 60 * 24));
+              min$$1 = 1 * max$$1; //NOTE: 1* is neceseccary to handle Dates in derived classes.
+              max$$1 = min$$1 + 1;
           }
           return [min$$1, max$$1];
+          // if(<any>max - <any>min <= 0) {
+          // 	min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
+          // 	max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
+          // }
+          // return [min, max];
       }
       calculateYDomain() {
           let nonEmptySets = [];
@@ -6987,7 +6987,8 @@
           this.xScale = linear$2()
               .domain(this.calculateXDomain())
               .range([0, this.width])
-              .nice();
+              .nice()
+              .clamp(true);
           this.xAxis = axisBottom(this.xScale)
               .ticks(Math.round(this.xTicksPerPixel * this.width));
       }
@@ -6995,7 +6996,8 @@
           this.yScale = linear$2()
               .domain(this.calculateYDomain())
               .range(this.invertYAxis ? [0, this.height] : [this.height, 0])
-              .nice();
+              .nice()
+              .clamp(true);
           this.yAxis = axisLeft(this.yScale)
               .ticks(Math.round(this.yTicksPerPixel * this.height));
       }
@@ -7164,6 +7166,9 @@
       convertRange(value, r1, r2) {
           return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
       }
+      randomIntFromInterval(min$$1, max$$1) {
+          return Math.floor(Math.random() * (max$$1 - min$$1 + 1) + min$$1);
+      }
       drawDataSet(dataIndex) {
           var d = this.data[dataIndex];
           if (d.length < 1) {
@@ -7256,7 +7261,7 @@
               this.informationDensity[i] = iLength / scaleLength;
           }
       }
-      updateTooltipn() {
+      updateTooltip() {
           var mouse$$1 = mouse(this.div.node());
           var mx = mouse$$1[0] - this.margin.left;
           var my = mouse$$1[1] - this.margin.top;
@@ -7302,10 +7307,11 @@
           return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
       }
       setupXScaleAndAxis() {
-          this.xScale = time()
+          this.xScalet = time()
               .domain(this.calculateXDomain())
               .range([0, this.width])
-              .nice();
+              .nice()
+              .clamp(true);
           var formatMilliSecond = timeFormat(".%L"), formatSecond = timeFormat(":%S"), formatHour = timeFormat("%I:%p"), formatWeek = timeFormat("%b %d"), formatMonth = timeFormat("%B"), formatYear = timeFormat("%Y");
           let multiFormat = (date$$1) => {
               return (second(date$$1) < date$$1 ? formatMilliSecond
@@ -7315,7 +7321,7 @@
                               : year(date$$1) < date$$1 ? formatMonth
                                   : formatYear)(date$$1);
           };
-          this.xAxis = axisBottom(this.xScale)
+          this.xAxis = axisBottom(this.xScalet)
               .tickFormat(multiFormat)
               .ticks(Math.round(this.xTicksPerPixel * this.width));
       }
@@ -7324,6 +7330,7 @@
           if (d.length < 1) {
               return;
           }
+          console.log(this.calculateXDomain());
           var iStart = this.displayIndexStart[dataIndex];
           var iEnd = this.displayIndexEnd[dataIndex];
           var informationDensity = this.informationDensity[dataIndex];
@@ -7331,10 +7338,12 @@
           if (informationDensity > this.maxInformationDensity) {
               drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
           }
-          // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
+          //Make iStart divisivble by drawEvery to prevent flickering graphs while panning
           iStart = Math.max(0, iStart - iStart % drawEvery);
           this.canvas.beginPath();
           this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
+          console.log(d[iStart][0]);
+          console.log(this.xScalet(d[iStart][0]));
           for (var i = iStart; i <= iEnd; i = i + drawEvery) {
               this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
           }
@@ -7621,13 +7630,8 @@
   }
   $(document).ready(function () {
       var data1 = [[1, 5], [0.5, 6], [5, 25], [6, 1], [10, 9],
-          [20, 55], [10, 25], [15, 25], [16, 19], [10, 89], [20, 55], [18, 5], [15, 6], [5, 25]];
-      // var data2: Array<[any, number]> = [[randomDate(),Math.floor(Math.random() * 100)],
-      // [randomDate(),Math.floor(Math.random() * 100)],
-      // [randomDate(),Math.floor(Math.random() * 100)],
-      // [randomDate(),Math.floor(Math.random() * 100)],
-      // [randomDate(),Math.floor(Math.random() * 100)],
-      // [randomDate(),Math.floor(Math.random() * 100)]];
+          [20, 55], [10, 32], [15, 25], [16, 19], [10, 89],
+          [27, 56], [18, 5], [15, 6], [72, 41]];
       var plot1 = new CanvasDataPlot(select("#maincontainer"), [1000, 900], {
           xAxisLabel: "IQ",
           yAxisLabel: "Test Score",
@@ -7663,7 +7667,7 @@
       var newDataPoint = [time$$1, 1.5];
       plot2.addDataPoint("ds1", newDataPoint, true, true);
       newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
-      var tsPlotGroup = new CanvasDataPlotGroup(select("#maincontainer"), [550, 350], true, true, {});
+      var tsPlotGroup = new CanvasDataPlotGroup(select("#maincontainer"), getDemoPlotSize(), true, true, {});
       tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
           yAxisLabel: "Voltage [V]"
       });

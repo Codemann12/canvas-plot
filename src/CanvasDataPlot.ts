@@ -57,7 +57,7 @@ export class CanvasDataPlot{
 	xAxisGroup: d3.Selection<any, {} , any , {}>;
 
 	tooltip: d3.Selection<any, {} , any , {}> ;
-	legend: d3.Selection<any, {} , any , {}>; // check type later 
+	legend: d3.Selection<any, {} , any , {}>; 
 	legendBG: any;
 
 	showTooltips: boolean;
@@ -108,10 +108,10 @@ export class CanvasDataPlot{
 		this.zoomListener = d3.zoom().on("zoom", this.zoomFunction);
 
 		//Append to the selected HTMLElement a div with the listed properties
-        this.div = this.parent.append("div")
-	   	  .attr("class", "cvpChart")
-		    .style("width", this.totalWidth + "px")
-		    .style("height", this.totalHeight + "px")
+    this.div = this.parent.append("div")
+	    .attr("class", "cvpChart")
+		  .style("width", this.totalWidth + "px")
+		  .style("height", this.totalHeight + "px")
 
 	   this.d3Canvas = this.div.append("canvas")
 		   .attr("class", "cvpCanvas")
@@ -138,7 +138,7 @@ export class CanvasDataPlot{
 		this.setupYScaleAndAxis();
 	
 
-	    this.yAxisGroup = this.svgTranslateGroup.append("g")
+	  this.yAxisGroup = this.svgTranslateGroup.append("g")
 			.attr("class", "y axis")
 			.call(this.yAxis);
 
@@ -151,22 +151,22 @@ export class CanvasDataPlot{
 		this.yAxisLabel = null;
 		if(this.xAxisLabelText.length > 0) {
 			this.xAxisLabel = this.svgTranslateGroup.append("text")
-				.attr("class", "cvpLabel")
-				.attr("x", Math.round(0.5*this.width))
-				.attr("y", this.height + 40)
-				.attr("text-anchor", "middle")
-				.text(this.xAxisLabelText);
+			.attr("class", "cvpLabel")
+			.attr("x", Math.round(0.5*this.width))
+			.attr("y", this.height + 40)
+			.attr("text-anchor", "middle")
+			.text(this.xAxisLabelText);
 		}
 
 
 		if(this.yAxisLabelText.length > 0) {
 			this.yAxisLabel = this.svg.append("text")
-				.attr("class", "cvpLabel")
-				.attr("x", Math.round(-0.5*this.height - this.margin.top))
-				.attr("y", 15)
-				.attr("transform", "rotate(-90)")
-				.attr("text-anchor", "middle")
-				.text(this.yAxisLabelText);
+			.attr("class", "cvpLabel")
+			.attr("x", Math.round(-0.5*this.height - this.margin.top))
+			.attr("y", 15)
+			.attr("transform", "rotate(-90)")
+			.attr("text-anchor", "middle")
+			.text(this.yAxisLabelText);
 		}
 
 		this.tooltip = null;
@@ -184,19 +184,19 @@ export class CanvasDataPlot{
 		this.drawCanvas();
 		this.resetZoomListenerAxes();
 
-	}
+	 }
 	// to be implement later
 	zoomFunction(): void {}	
 
 	addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[any, number]>, colorString?: string,
 		 updateDomains?: boolean, copyData?: boolean) : void{
-    this.dataIDs.push(uniqueID);
-		this.dataLabels.push(label);
-		this.dataColors.push(colorString);
-		this.displayIndexStart.push(0);
-		this.displayIndexEnd.push(0);
-		dataSet = dataSet || []; 
-		if(copyData) {
+     this.dataIDs.push(uniqueID);
+		 this.dataLabels.push(label);
+		 this.dataColors.push(colorString);
+		 this.displayIndexStart.push(0);
+		 this.displayIndexEnd.push(0);
+		 dataSet = dataSet || []; 
+		 if(copyData) {
 			var dataIndex = this.data.length;
 		  this.data.push([]);  
 			var dataSetLength = dataSet.length;
@@ -223,7 +223,7 @@ export class CanvasDataPlot{
 
 
 
-    addDataPoint(uniqueID?: string, dataPoint?: [any, number], updateDomains?: boolean, copyData?: boolean): void {
+  addDataPoint(uniqueID?: string, dataPoint?: [any, number], updateDomains?: boolean, copyData?: boolean): void {
 			let i: number = this.dataIDs.indexOf(uniqueID);
 			if(i < 0 || (this.data[i].length > 0 && this.data[i][this.data[i].length-1][0] > dataPoint[0])) {
 				return;
@@ -337,16 +337,15 @@ export class CanvasDataPlot{
 	}
 
 
-	calculateXDomain(): any {
+	calculateXDomain(): Array<any> {
 		let nonEmptySets: Array<Array<[any,number]>> = [];
 		this.data.forEach(ds => {
-			if(ds && ds.length > 0) {
+		if(ds && ds.length > 0) {
 				nonEmptySets.push(ds);
 			}
 		});
 		
 		if(nonEmptySets.length < 1) {
-			//return [new Date("2019-02-24"), new Date()]; 
 			return [0,1];
 		}
 	
@@ -358,12 +357,19 @@ export class CanvasDataPlot{
 			min = minCandidate < min ? minCandidate : min;
 			max = max < maxCandidate ? maxCandidate : max;
 		}
-	
-		if(<any>max - <any>min <= 0) {
-			min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
-			max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
+
+		if(max-min <= 0) {
+			min = 1*max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
+			max = min+1;
 		}
+	
 		return [min, max];
+	
+		// if(<any>max - <any>min <= 0) {
+		// 	min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
+		// 	max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
+		// }
+		// return [min, max];
 	}
 
 
@@ -404,7 +410,8 @@ export class CanvasDataPlot{
 		this.xScale = d3.scaleLinear()
 			.domain(this.calculateXDomain())
 			.range([0, this.width])
-			.nice();
+			.nice()
+			.clamp(true)
 	
 		this.xAxis = d3.axisBottom(this.xScale)
 					  .ticks(Math.round(this.xTicksPerPixel*this.width));	
@@ -415,7 +422,8 @@ export class CanvasDataPlot{
 		this.yScale = d3.scaleLinear()
 			.domain(this.calculateYDomain())
 			.range(this.invertYAxis ? [0, this.height] : [this.height, 0])
-			.nice();
+			.nice()
+			.clamp(true);
 	
 		this.yAxis = d3.axisLeft(this.yScale)
 			.ticks(Math.round(this.yTicksPerPixel*this.height));		
@@ -616,6 +624,10 @@ export class CanvasDataPlot{
 
 convertRange( value: any, r1: Array<number>, r2: Array<number> ): number{ 
     return ( value - r1[ 0 ] ) * ( r2[ 1 ] - r2[ 0 ] ) / ( r1[ 1 ] - r1[ 0 ] ) + r2[ 0 ];
+}
+
+randomIntFromInterval(min: number, max:number){
+    return Math.floor(Math.random()*(max-min+1)+min);
 }
 	
 drawDataSet(dataIndex: number): void {

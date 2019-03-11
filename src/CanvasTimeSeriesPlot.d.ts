@@ -5,11 +5,12 @@ export declare class CanvasTimeSeriesPlot extends CDP {
     plotLineWidth: number;
     maxInformationDensity: number;
     showMarkerDensity: number;
+    xScalet: any;
     constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CDP.Config);
     addDataSet(uniqueID: string, label: string, dataSet: Array<[Date, number]>, colorString: string, updateDomains: boolean, copyData?: boolean): void;
     removeDataSet(uniqueID: string): void;
     updateDisplayIndices(): void;
-    updateTooltipn(): void;
+    updateTooltip(): void;
     getTooltipStringX(dataPoint: [Date, number]): string;
     setupXScaleAndAxis(): void;
     drawDataSet(dataIndex: number): void;
