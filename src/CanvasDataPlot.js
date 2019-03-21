@@ -105,10 +105,10 @@ export class CanvasDataPlot {
         this.dataColors.push(colorString);
         this.displayIndexStart.push(0);
         this.displayIndexEnd.push(0);
-        dataSet = dataSet || [];
+        //  dataSet = dataSet || []; 
         if (copyData) {
             var dataIndex = this.data.length;
-            this.data.push([]);
+            this.data.push(dataSet);
             var dataSetLength = dataSet.length;
             for (var i = 0; i < dataSetLength; ++i) {
                 var sliceData = jQuery.extend(true, {}, dataSet[i]); //deep copy --> arr.slice(0)
@@ -225,7 +225,7 @@ export class CanvasDataPlot {
     calculateXDomain() {
         let nonEmptySets = [];
         this.data.forEach(ds => {
-            if (ds && ds.length > 0) {
+            if (ds.length !== 0 && ds.length > 0) {
                 nonEmptySets.push(ds);
             }
         });
@@ -245,15 +245,10 @@ export class CanvasDataPlot {
             max = min + 1;
         }
         return [min, max];
-        // if(<any>max - <any>min <= 0) {
-        // 	min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
-        // 	max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
-        // }
-        // return [min, max];
     }
     calculateYDomain() {
         let nonEmptySets = [];
-        this.data.forEach(function (ds) {
+        this.data.forEach(ds => {
             if (ds && ds.length > 0) {
                 nonEmptySets.push(ds);
             }
@@ -495,13 +490,13 @@ export class CanvasDataPlot {
         var original = inObj || {};
         var keys = Object.getOwnPropertyNames(original);
         var outObj = {};
-        keys.forEach(function (k) {
+        keys.forEach(k => {
             outObj[k] = original[k];
         });
         return outObj;
     }
     CanvasPlot_appendToObject(obj, objToAppend) {
-        Object.keys(objToAppend).forEach(function (k) {
+        Object.keys(objToAppend).forEach(k => {
             if (!obj.hasOwnProperty(k)) {
                 obj[k] = objToAppend[k];
             }
@@ -510,7 +505,7 @@ export class CanvasDataPlot {
                     //appendToObject(obj[k], objToAppend[k]); Not define
                 }
                 else if (Array.isArray(obj[k]) && Array.isArray(objToAppend[k])) {
-                    objToAppend[k].forEach(function (d) {
+                    objToAppend[k].forEach((d) => {
                         if (obj[k].indexOf(d) < 0) {
                             obj[k].push(d);
                         }

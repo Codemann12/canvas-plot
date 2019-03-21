@@ -190,15 +190,16 @@ export class CanvasDataPlot{
 
 	addDataSet(uniqueID?: string, label?: string, dataSet?: Array<[any, number]>, colorString?: string,
 		 updateDomains?: boolean, copyData?: boolean) : void{
+		
      this.dataIDs.push(uniqueID);
 		 this.dataLabels.push(label);
 		 this.dataColors.push(colorString);
 		 this.displayIndexStart.push(0);
 		 this.displayIndexEnd.push(0);
-		 dataSet = dataSet || []; 
+		//  dataSet = dataSet || []; 
 		 if(copyData) {
 			var dataIndex = this.data.length;
-		  this.data.push([]);  
+		  this.data.push(dataSet);  
 			var dataSetLength = dataSet.length;
 			for(var i=0; i<dataSetLength; ++i) {
 				var sliceData = jQuery.extend(true, {}, dataSet[i]); //deep copy --> arr.slice(0)
@@ -339,14 +340,15 @@ export class CanvasDataPlot{
 
 	calculateXDomain(): Array<any> {
 		let nonEmptySets: Array<Array<[any,number]>> = [];
-		this.data.forEach(ds => {
-		if(ds && ds.length > 0) {
+  
+		this.data.forEach(ds =>{
+		if(ds.length !== 0 && ds.length > 0) {
 				nonEmptySets.push(ds);
 			}
 		});
-		
+
 		if(nonEmptySets.length < 1) {
-			return [0,1];
+			 return [0,1];
 		}
 	
 		var min = nonEmptySets[0][0][0];
@@ -362,21 +364,15 @@ export class CanvasDataPlot{
 			min = 1*max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
 			max = min+1;
 		}
-	
+
 		return [min, max];
-	
-		// if(<any>max - <any>min <= 0) {
-		// 	min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
-		// 	max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
-		// }
-		// return [min, max];
 	}
 
 
     
-	calculateYDomain(): any{
+	calculateYDomain(): Array<any>{
 		let nonEmptySets: Array<Array<[any,number]>> = [];
-		this.data.forEach(function(ds) {
+		this.data.forEach(ds => {
 			if(ds && ds.length > 0) {
 				nonEmptySets.push(ds);
 			}
@@ -414,7 +410,7 @@ export class CanvasDataPlot{
 			.clamp(true)
 	
 		this.xAxis = d3.axisBottom(this.xScale)
-					  .ticks(Math.round(this.xTicksPerPixel*this.width));	
+			.ticks(Math.round(this.xTicksPerPixel*this.width));	
 	}
 
 
@@ -539,7 +535,7 @@ export class CanvasDataPlot{
 			.attr("height", this.legendYPadding + this.dataLabels.length*(this.legendYPadding+this.legendLineHeight) - 1);
 
 		var maxTextLen = 0;
-		this.dataLabels.forEach( (s: string, i:number) => {
+		this.dataLabels.forEach((s: string, i:number) => {
 			this.legend.append("rect")
 			.attr("x", this.legendXPadding)
 			.attr("y", this.legendYPadding + i*(this.legendYPadding+this.legendLineHeight))
@@ -670,14 +666,14 @@ CanvasPlot_shallowObjectCopy(inObj: any): any{
 	var original = inObj || {};
 	var keys = Object.getOwnPropertyNames(original);
 	var outObj: any = {};
-	keys.forEach(function(k) {
+	keys.forEach(k => {
 		outObj[k] = original[k];
 	});
 	return outObj;
 }
 
 CanvasPlot_appendToObject(obj: any, objToAppend: any): void {
-	Object.keys(objToAppend).forEach(function(k) {
+	Object.keys(objToAppend).forEach(k =>{
 		if(!obj.hasOwnProperty(k)) {
 			obj[k] = objToAppend[k];
 		}
@@ -686,7 +682,7 @@ CanvasPlot_appendToObject(obj: any, objToAppend: any): void {
 				//appendToObject(obj[k], objToAppend[k]); Not define
 			}
 			else if(Array.isArray(obj[k]) && Array.isArray(objToAppend[k])) {
-				objToAppend[k].forEach(function(d: number) {
+				objToAppend[k].forEach((d: number) => {
 					if(obj[k].indexOf(d) < 0) {
 						obj[k].push(d);
 					}

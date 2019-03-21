@@ -11,7 +11,7 @@ export class CanvasTimeSeriesPlot extends CDP {
     }
     addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
         this.informationDensity.push(1);
-        CDP.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
+        super.addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData);
     }
     removeDataSet(uniqueID) {
         var index = this.dataIDs.indexOf(uniqueID);
@@ -21,7 +21,7 @@ export class CanvasTimeSeriesPlot extends CDP {
         this.removeDataSet.call(this, uniqueID);
     }
     updateDisplayIndices() {
-        CDP.prototype.updateDisplayIndices.call(this);
+        super.updateDisplayIndices();
         var nDataSets = this.data.length;
         for (var i = 0; i < nDataSets; ++i) {
             var d = this.data[i];
@@ -80,8 +80,39 @@ export class CanvasTimeSeriesPlot extends CDP {
         var s = zeroPad2(date.getUTCSeconds());
         return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
     }
+    addDays(date, days) {
+        date.setDate(date.getDate() + days);
+        return date;
+    }
+    randomDate(start, end) {
+        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    }
+    calculateXDomain() {
+        var dates = [];
+        let nonEmptySets = [];
+        this.data.forEach(ds => {
+            if (ds && ds.length > 0) {
+                nonEmptySets.push(ds);
+            }
+        });
+        nonEmptySets.forEach(dataPoint => {
+            dataPoint.forEach(point => {
+                dates.push(point[0]);
+            });
+        });
+        if (dates.length === 0) {
+            for (var i = 1; i < 100; i++) {
+                dates.push(this.randomDate(new Date(2015, 2, 23), new Date()));
+            }
+        }
+        dates = Array.from(new Set(dates));
+        var min = dates.reduce(function (a, b) { return a < b ? a : b; });
+        var max = dates.reduce(function (a, b) { return a > b ? a : b; });
+        max = max <= min ? this.addDays(max, 5) : max;
+        return [min, max];
+    }
     setupXScaleAndAxis() {
-        this.xScalet = d3.scaleTime()
+        this.xScale = d3.scaleTime()
             .domain(this.calculateXDomain())
             .range([0, this.width])
             .nice()
@@ -95,7 +126,7 @@ export class CanvasTimeSeriesPlot extends CDP {
                             : d3.timeYear(date) < date ? formatMonth
                                 : formatYear)(date);
         };
-        this.xAxis = d3.axisBottom(this.xScalet)
+        this.xAxis = d3.axisBottom(this.xScale)
             .tickFormat(multiFormat)
             .ticks(Math.round(this.xTicksPerPixel * this.width));
     }
@@ -104,7 +135,6 @@ export class CanvasTimeSeriesPlot extends CDP {
         if (d.length < 1) {
             return;
         }
-        console.log(this.calculateXDomain());
         var iStart = this.displayIndexStart[dataIndex];
         var iEnd = this.displayIndexEnd[dataIndex];
         var informationDensity = this.informationDensity[dataIndex];
@@ -116,8 +146,8 @@ export class CanvasTimeSeriesPlot extends CDP {
         iStart = Math.max(0, iStart - iStart % drawEvery);
         this.canvas.beginPath();
         this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-        console.log(d[iStart][0]);
-        console.log(this.xScalet(d[iStart][0]));
+        console.log("istart " + d[iStart][0]);
+        console.log(this.xScale(d[iStart][0])); // bad reference ...xscale is missbehaving....
         for (var i = iStart; i <= iEnd; i = i + drawEvery) {
             this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
         }

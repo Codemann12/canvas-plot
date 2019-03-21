@@ -66,7 +66,7 @@ export declare class CanvasDataPlot {
     getXDomain(): Array<any>;
     getYDomain(): Array<number>;
     calculateXDomain(): Array<any>;
-    calculateYDomain(): any;
+    calculateYDomain(): Array<any>;
     destroy(): void;
     setupXScaleAndAxis(): void;
     setupYScaleAndAxis(): void;

@@ -3275,12 +3275,12 @@
     return map;
   }
 
-  function Set() {}
+  function Set$1() {}
 
   var proto = map$2.prototype;
 
-  Set.prototype = set$2.prototype = {
-    constructor: Set,
+  Set$1.prototype = set$2.prototype = {
+    constructor: Set$1,
     has: proto.has,
     add: function(value) {
       value += "";
@@ -3296,10 +3296,10 @@
   };
 
   function set$2(object, f) {
-    var set = new Set;
+    var set = new Set$1;
 
     // Copy constructor.
-    if (object instanceof Set) object.each(function(value) { set.add(value); });
+    if (object instanceof Set$1) object.each(function(value) { set.add(value); });
 
     // Otherwise, assume it’s an array.
     else if (object) {
@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsvFormat(delimiter) {
+  function dsv(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,9 +3479,19 @@
     };
   }
 
-  var csv = dsvFormat(",");
+  var csv = dsv(",");
 
-  var tsv = dsvFormat("\t");
+  var csvParse = csv.parse;
+  var csvParseRows = csv.parseRows;
+  var csvFormat = csv.format;
+  var csvFormatRows = csv.formatRows;
+
+  var tsv = dsv("\t");
+
+  var tsvParse = tsv.parse;
+  var tsvParseRows = tsv.parseRows;
+  var tsvFormat = tsv.format;
+  var tsvFormatRows = tsv.formatRows;
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -6812,10 +6822,10 @@
           this.dataColors.push(colorString);
           this.displayIndexStart.push(0);
           this.displayIndexEnd.push(0);
-          dataSet = dataSet || [];
+          //  dataSet = dataSet || []; 
           if (copyData) {
               var dataIndex = this.data.length;
-              this.data.push([]);
+              this.data.push(dataSet);
               var dataSetLength = dataSet.length;
               for (var i = 0; i < dataSetLength; ++i) {
                   var sliceData = jQuery.extend(true, {}, dataSet[i]); //deep copy --> arr.slice(0)
@@ -6932,7 +6942,7 @@
       calculateXDomain() {
           let nonEmptySets = [];
           this.data.forEach(ds => {
-              if (ds && ds.length > 0) {
+              if (ds.length !== 0 && ds.length > 0) {
                   nonEmptySets.push(ds);
               }
           });
@@ -6952,15 +6962,10 @@
               max$$1 = min$$1 + 1;
           }
           return [min$$1, max$$1];
-          // if(<any>max - <any>min <= 0) {
-          // 	min.setTime((1000 * 60 * 60 * 24)*max.getTime()); 
-          // 	max.setTime(min.getTime()+(1000 * 60 * 60 * 24));
-          // }
-          // return [min, max];
       }
       calculateYDomain() {
           let nonEmptySets = [];
-          this.data.forEach(function (ds) {
+          this.data.forEach(ds => {
               if (ds && ds.length > 0) {
                   nonEmptySets.push(ds);
               }
@@ -7202,20 +7207,20 @@
           var original = inObj || {};
           var keys$$1 = Object.getOwnPropertyNames(original);
           var outObj = {};
-          keys$$1.forEach(function (k) {
+          keys$$1.forEach(k => {
               outObj[k] = original[k];
           });
           return outObj;
       }
       CanvasPlot_appendToObject(obj, objToAppend) {
-          Object.keys(objToAppend).forEach(function (k) {
+          Object.keys(objToAppend).forEach(k => {
               if (!obj.hasOwnProperty(k)) {
                   obj[k] = objToAppend[k];
               }
               else {
                   if (obj[k] !== null && typeof obj[k] === "object" && !Array.isArray(obj[k])) ;
                   else if (Array.isArray(obj[k]) && Array.isArray(objToAppend[k])) {
-                      objToAppend[k].forEach(function (d) {
+                      objToAppend[k].forEach((d) => {
                           if (obj[k].indexOf(d) < 0) {
                               obj[k].push(d);
                           }
@@ -7237,7 +7242,7 @@
       }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
           this.informationDensity.push(1);
-          CanvasDataPlot.prototype.addDataSet.call(this, uniqueID, label, dataSet, colorString, updateDomains, copyData);
+          super.addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData);
       }
       removeDataSet(uniqueID) {
           var index = this.dataIDs.indexOf(uniqueID);
@@ -7247,7 +7252,7 @@
           this.removeDataSet.call(this, uniqueID);
       }
       updateDisplayIndices() {
-          CanvasDataPlot.prototype.updateDisplayIndices.call(this);
+          super.updateDisplayIndices();
           var nDataSets = this.data.length;
           for (var i = 0; i < nDataSets; ++i) {
               var d = this.data[i];
@@ -7306,8 +7311,39 @@
           var s = zeroPad2(date$$1.getUTCSeconds());
           return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
       }
+      addDays(date$$1, days$$1) {
+          date$$1.setDate(date$$1.getDate() + days$$1);
+          return date$$1;
+      }
+      randomDate(start, end) {
+          return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+      }
+      calculateXDomain() {
+          var dates = [];
+          let nonEmptySets = [];
+          this.data.forEach(ds => {
+              if (ds && ds.length > 0) {
+                  nonEmptySets.push(ds);
+              }
+          });
+          nonEmptySets.forEach(dataPoint => {
+              dataPoint.forEach(point$$1 => {
+                  dates.push(point$$1[0]);
+              });
+          });
+          if (dates.length === 0) {
+              for (var i = 1; i < 100; i++) {
+                  dates.push(this.randomDate(new Date(2015, 2, 23), new Date()));
+              }
+          }
+          dates = Array.from(new Set(dates));
+          var min$$1 = dates.reduce(function (a, b) { return a < b ? a : b; });
+          var max$$1 = dates.reduce(function (a, b) { return a > b ? a : b; });
+          max$$1 = max$$1 <= min$$1 ? this.addDays(max$$1, 5) : max$$1;
+          return [min$$1, max$$1];
+      }
       setupXScaleAndAxis() {
-          this.xScalet = time()
+          this.xScale = time()
               .domain(this.calculateXDomain())
               .range([0, this.width])
               .nice()
@@ -7321,7 +7357,7 @@
                               : year(date$$1) < date$$1 ? formatMonth
                                   : formatYear)(date$$1);
           };
-          this.xAxis = axisBottom(this.xScalet)
+          this.xAxis = axisBottom(this.xScale)
               .tickFormat(multiFormat)
               .ticks(Math.round(this.xTicksPerPixel * this.width));
       }
@@ -7330,7 +7366,6 @@
           if (d.length < 1) {
               return;
           }
-          console.log(this.calculateXDomain());
           var iStart = this.displayIndexStart[dataIndex];
           var iEnd = this.displayIndexEnd[dataIndex];
           var informationDensity = this.informationDensity[dataIndex];
@@ -7342,8 +7377,8 @@
           iStart = Math.max(0, iStart - iStart % drawEvery);
           this.canvas.beginPath();
           this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-          console.log(d[iStart][0]);
-          console.log(this.xScalet(d[iStart][0]));
+          console.log("istart " + d[iStart][0]);
+          console.log(this.xScale(d[iStart][0])); // bad reference ...xscale is missbehaving....
           for (var i = iStart; i <= iEnd; i = i + drawEvery) {
               this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
           }
@@ -7628,6 +7663,9 @@
   function getDemoPlotSize() {
       return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
   }
+  function randomDate(start, end) {
+      return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  }
   $(document).ready(function () {
       var data1 = [[1, 5], [0.5, 6], [5, 25], [6, 1], [10, 9],
           [20, 55], [10, 32], [15, 25], [16, 19], [10, 89],
@@ -7643,30 +7681,33 @@
       plot1.addDataPoint("ds1", [20, 10]); // Will be added.
       plot1.addDataPoint("ds1", [21, 0]);
       plot1.updateDomains([-2, 22], [-60, 15], true);
-      // Since we told addDataSet() not to copy our data, data1 is mutated by addDataPoint().
       var ts1 = [];
       var ts2 = [];
-      var now$$1 = new Date();
+      // var now = new Date();
+      // for(var i=0; i<100; ++i) {
+      //     var time = new Date(now);
+      //     time.setHours(i);
+      //     ts1.push([time, Math.random()]);
+      //     ts2.push([time, Math.random()]);
+      // }
       for (var i = 0; i < 100; ++i) {
-          var time$$1 = new Date(now$$1);
-          time$$1.setHours(i);
-          ts1.push([time$$1, Math.random()]);
-          ts2.push([time$$1, Math.random()]);
+          ts1.push([randomDate(new Date(2010, 1, 1), new Date()), Math.random()]);
+          ts2.push([randomDate(new Date(2015, 12, 11), new Date()), Math.random()]);
       }
       var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
           yAxisLabel: "Voltage [V]"
       });
-      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, true);
-      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, true);
+      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
+      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
       plot2.setZoomYAxis(false);
       $(window).resize(function () {
           plot2.resize(getDemoPlotSize());
       });
-      var time$$1 = new Date(now$$1);
-      time$$1.setHours(101);
-      var newDataPoint = [time$$1, 1.5];
-      plot2.addDataPoint("ds1", newDataPoint, true, true);
-      newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
+      // var time = new Date(now);
+      // time.setHours(101);
+      // var newDataPoint:[Date, number] = [time, 1.5];
+      // plot2.addDataPoint("ds1", newDataPoint, true, true);
+      // newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
       var tsPlotGroup = new CanvasDataPlotGroup(select("#maincontainer"), getDemoPlotSize(), true, true, {});
       tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
           yAxisLabel: "Voltage [V]"
@@ -7689,7 +7730,7 @@
       });
       var tsVector1 = [];
       for (var i = 0; i < 1000; ++i) {
-          var time$$1 = new Date(now$$1);
+          var time$$1 = new Date(new Date());
           time$$1.setHours(i);
           // tsVector1.push([time, 50, 0.01*i*Math.PI, 100]);
           tsVector1.push([time$$1, 0.01 * i * Math.PI]);
