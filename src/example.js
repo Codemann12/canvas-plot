@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsv(delimiter) {
+  function dsvFormat(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,19 +3479,9 @@
     };
   }
 
-  var csv = dsv(",");
+  var csv = dsvFormat(",");
 
-  var csvParse = csv.parse;
-  var csvParseRows = csv.parseRows;
-  var csvFormat = csv.format;
-  var csvFormatRows = csv.formatRows;
-
-  var tsv = dsv("\t");
-
-  var tsvParse = tsv.parse;
-  var tsvParseRows = tsv.parseRows;
-  var tsvFormat = tsv.format;
-  var tsvFormatRows = tsv.formatRows;
+  var tsv = dsvFormat("\t");
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -6957,9 +6947,13 @@
               min$$1 = minCandidate < min$$1 ? minCandidate : min$$1;
               max$$1 = max$$1 < maxCandidate ? maxCandidate : max$$1;
           }
+          // if(max-min <= 0) {
+          // 	min = 1*max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
+          // 	max = min+1;
+          // }
           if (max$$1 - min$$1 <= 0) {
-              min$$1 = 1 * max$$1; //NOTE: 1* is neceseccary to handle Dates in derived classes.
-              max$$1 = min$$1 + 1;
+              min$$1 = max$$1 - 1;
+              max$$1 += 1;
           }
           return [min$$1, max$$1];
       }
@@ -7192,8 +7186,8 @@
       }
       resetZoomListenerAxes() {
           /* this.zoomListener.translateTo(this.div,
-             (this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1])),
-             (this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */
+               (this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1])),
+               (this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */
           //this.div.call(this.zoomListener.transform, d3.zoomIdentity);
       }
       updateZoomValues(scale, translate) {
@@ -7239,6 +7233,7 @@
           this.plotLineWidth = config.plotLineWidth || 1;
           this.maxInformationDensity = config.maxInformationDensity || 2.0;
           this.showMarkerDensity = config.showMarkerDensity || 0.14;
+          this.setupXScaleAndAxis();
       }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
           this.informationDensity.push(1);
@@ -7252,7 +7247,6 @@
           this.removeDataSet.call(this, uniqueID);
       }
       updateDisplayIndices() {
-          super.updateDisplayIndices();
           var nDataSets = this.data.length;
           for (var i = 0; i < nDataSets; ++i) {
               var d = this.data[i];
@@ -7366,6 +7360,12 @@
           if (d.length < 1) {
               return;
           }
+          // var firstElem = this.calculateXDomain()[0]
+          // var last = this.calculateXDomain()[1]
+          // console.log(firstElem)
+          // console.log(this.xScale(firstElem))
+          // console.log(this.xScale(last))
+          // console.log("last: "+last)
           var iStart = this.displayIndexStart[dataIndex];
           var iEnd = this.displayIndexEnd[dataIndex];
           var informationDensity = this.informationDensity[dataIndex];
@@ -7377,8 +7377,8 @@
           iStart = Math.max(0, iStart - iStart % drawEvery);
           this.canvas.beginPath();
           this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-          console.log("istart " + d[iStart][0]);
-          console.log(this.xScale(d[iStart][0])); // bad reference ...xscale is missbehaving....
+          // console.log("istart "+d[iStart][0])
+          // console.log(this.xScale(d[iStart][0])) // bad reference ...xscale is missbehaving....
           for (var i = iStart; i <= iEnd; i = i + drawEvery) {
               this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
           }

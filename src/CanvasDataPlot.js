@@ -240,9 +240,13 @@ export class CanvasDataPlot {
             min = minCandidate < min ? minCandidate : min;
             max = max < maxCandidate ? maxCandidate : max;
         }
+        // if(max-min <= 0) {
+        // 	min = 1*max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
+        // 	max = min+1;
+        // }
         if (max - min <= 0) {
-            min = 1 * max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
-            max = min + 1;
+            min = max - 1;
+            max += 1;
         }
         return [min, max];
     }
@@ -475,8 +479,8 @@ export class CanvasDataPlot {
     }
     resetZoomListenerAxes() {
         /* this.zoomListener.translateTo(this.div,
-           (this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1])),
-           (this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */
+             (this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1])),
+             (this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */
         //this.div.call(this.zoomListener.transform, d3.zoomIdentity);
     }
     updateZoomValues(scale, translate) {

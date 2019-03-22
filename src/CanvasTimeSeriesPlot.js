@@ -8,6 +8,7 @@ export class CanvasTimeSeriesPlot extends CDP {
         this.plotLineWidth = config.plotLineWidth || 1;
         this.maxInformationDensity = config.maxInformationDensity || 2.0;
         this.showMarkerDensity = config.showMarkerDensity || 0.14;
+        this.setupXScaleAndAxis();
     }
     addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
         this.informationDensity.push(1);
@@ -21,7 +22,6 @@ export class CanvasTimeSeriesPlot extends CDP {
         this.removeDataSet.call(this, uniqueID);
     }
     updateDisplayIndices() {
-        super.updateDisplayIndices();
         var nDataSets = this.data.length;
         for (var i = 0; i < nDataSets; ++i) {
             var d = this.data[i];
@@ -135,6 +135,12 @@ export class CanvasTimeSeriesPlot extends CDP {
         if (d.length < 1) {
             return;
         }
+        // var firstElem = this.calculateXDomain()[0]
+        // var last = this.calculateXDomain()[1]
+        // console.log(firstElem)
+        // console.log(this.xScale(firstElem))
+        // console.log(this.xScale(last))
+        // console.log("last: "+last)
         var iStart = this.displayIndexStart[dataIndex];
         var iEnd = this.displayIndexEnd[dataIndex];
         var informationDensity = this.informationDensity[dataIndex];
@@ -146,8 +152,8 @@ export class CanvasTimeSeriesPlot extends CDP {
         iStart = Math.max(0, iStart - iStart % drawEvery);
         this.canvas.beginPath();
         this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-        console.log("istart " + d[iStart][0]);
-        console.log(this.xScale(d[iStart][0])); // bad reference ...xscale is missbehaving....
+        // console.log("istart "+d[iStart][0])
+        // console.log(this.xScale(d[iStart][0])) // bad reference ...xscale is missbehaving....
         for (var i = iStart; i <= iEnd; i = i + drawEvery) {
             this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
         }

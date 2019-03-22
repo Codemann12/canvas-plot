@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import {CanvasDataPlot as CDP} from './CanvasDataPlot'
 
 
+
 export class CanvasTimeSeriesPlot extends CDP{
     informationDensity: Array<number>;
     plotLineWidth: number;
@@ -15,6 +16,8 @@ export class CanvasTimeSeriesPlot extends CDP{
         this.plotLineWidth = config.plotLineWidth || 1;
         this.maxInformationDensity = config.maxInformationDensity || 2.0;
         this.showMarkerDensity = config.showMarkerDensity || 0.14;
+      
+        this.setupXScaleAndAxis();
     }
    
     
@@ -33,9 +36,7 @@ export class CanvasTimeSeriesPlot extends CDP{
     }
 
 
-    updateDisplayIndices(): void{
-       super.updateDisplayIndices();
-    
+    updateDisplayIndices(): void{ 
         var nDataSets = this.data.length;
         for(var i=0; i<nDataSets; ++i) {
             var d = this.data[i];
@@ -145,13 +146,13 @@ export class CanvasTimeSeriesPlot extends CDP{
 
     
     setupXScaleAndAxis() { 
-        this.xScale = d3.scaleTime()
+           this.xScale = d3.scaleTime()
             .domain(this.calculateXDomain())
             .range([0, this.width])
             .nice()
             .clamp(true);
-        
-        
+       
+      
         var formatMilliSecond = d3.timeFormat(".%L"),
             formatSecond = d3.timeFormat(":%S"),
             formatHour = d3.timeFormat("%I:%p"),
@@ -175,11 +176,17 @@ export class CanvasTimeSeriesPlot extends CDP{
 
 
     drawDataSet(dataIndex: number): void{
-        var d = <Array<[Date, number]>>this.data[dataIndex];    
+        var d: Array<[Date, number]> = this.data[dataIndex];    
         if(d.length < 1) {
-            return;
+           return;
         }
-  
+          
+        // var firstElem = this.calculateXDomain()[0]
+        // var last = this.calculateXDomain()[1]
+        // console.log(firstElem)
+        // console.log(this.xScale(firstElem))
+        // console.log(this.xScale(last))
+        // console.log("last: "+last)
         var iStart = this.displayIndexStart[dataIndex];
         var iEnd = this.displayIndexEnd[dataIndex];
         var informationDensity = this.informationDensity[dataIndex];
@@ -194,8 +201,8 @@ export class CanvasTimeSeriesPlot extends CDP{
        
         this.canvas.beginPath();
         this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-        console.log("istart "+d[iStart][0])
-        console.log(this.xScale(d[iStart][0])) // bad reference ...xscale is missbehaving....
+        // console.log("istart "+d[iStart][0])
+        // console.log(this.xScale(d[iStart][0])) // bad reference ...xscale is missbehaving....
         for(var i=iStart; i<=iEnd; i=i+drawEvery) {
             this.canvas.lineTo(this.xScale(d[i][0]),  this.yScale(d[i][1]));
         }
