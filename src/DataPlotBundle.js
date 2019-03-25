@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (factory());
-}(this, (function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.canvasplot = {})));
+}(this, (function (exports) { 'use strict';
 
   function ascending(a, b) {
     return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
@@ -3275,12 +3275,12 @@
     return map;
   }
 
-  function Set$1() {}
+  function Set() {}
 
   var proto = map$2.prototype;
 
-  Set$1.prototype = set$2.prototype = {
-    constructor: Set$1,
+  Set.prototype = set$2.prototype = {
+    constructor: Set,
     has: proto.has,
     add: function(value) {
       value += "";
@@ -3296,10 +3296,10 @@
   };
 
   function set$2(object, f) {
-    var set = new Set$1;
+    var set = new Set;
 
     // Copy constructor.
-    if (object instanceof Set$1) object.each(function(value) { set.add(value); });
+    if (object instanceof Set) object.each(function(value) { set.add(value); });
 
     // Otherwise, assume it’s an array.
     else if (object) {
@@ -4619,25 +4619,6 @@
     return linearish(scale);
   }
 
-  function nice(domain, interval) {
-    domain = domain.slice();
-
-    var i0 = 0,
-        i1 = domain.length - 1,
-        x0 = domain[i0],
-        x1 = domain[i1],
-        t;
-
-    if (x1 < x0) {
-      t = i0, i0 = i1, i1 = t;
-      t = x0, x0 = x1, x1 = t;
-    }
-
-    domain[i0] = interval.floor(x0);
-    domain[i1] = interval.ceil(x1);
-    return domain;
-  }
-
   var t0$1 = new Date,
       t1$1 = new Date;
 
@@ -4728,6 +4709,7 @@
       return (end - start) / k;
     });
   };
+  var milliseconds = millisecond.range;
 
   var durationSecond = 1e3;
   var durationMinute = 6e4;
@@ -4744,6 +4726,7 @@
   }, function(date) {
     return date.getUTCSeconds();
   });
+  var seconds = second.range;
 
   var minute = newInterval(function(date) {
     date.setTime(Math.floor(date / durationMinute) * durationMinute);
@@ -4754,6 +4737,7 @@
   }, function(date) {
     return date.getMinutes();
   });
+  var minutes = minute.range;
 
   var hour = newInterval(function(date) {
     var offset = date.getTimezoneOffset() * durationMinute % durationHour;
@@ -4766,6 +4750,7 @@
   }, function(date) {
     return date.getHours();
   });
+  var hours = hour.range;
 
   var day = newInterval(function(date) {
     date.setHours(0, 0, 0, 0);
@@ -4776,6 +4761,7 @@
   }, function(date) {
     return date.getDate() - 1;
   });
+  var days = day.range;
 
   function weekday(i) {
     return newInterval(function(date) {
@@ -4808,6 +4794,7 @@
   }, function(date) {
     return date.getMonth();
   });
+  var months = month.range;
 
   var year = newInterval(function(date) {
     date.setMonth(0, 1);
@@ -4830,6 +4817,7 @@
       date.setFullYear(date.getFullYear() + step * k);
     });
   };
+  var years = year.range;
 
   var utcMinute = newInterval(function(date) {
     date.setUTCSeconds(0, 0);
@@ -4840,6 +4828,7 @@
   }, function(date) {
     return date.getUTCMinutes();
   });
+  var utcMinutes = utcMinute.range;
 
   var utcHour = newInterval(function(date) {
     date.setUTCMinutes(0, 0, 0);
@@ -4850,6 +4839,7 @@
   }, function(date) {
     return date.getUTCHours();
   });
+  var utcHours = utcHour.range;
 
   var utcDay = newInterval(function(date) {
     date.setUTCHours(0, 0, 0, 0);
@@ -4860,6 +4850,7 @@
   }, function(date) {
     return date.getUTCDate() - 1;
   });
+  var utcDays = utcDay.range;
 
   function utcWeekday(i) {
     return newInterval(function(date) {
@@ -4880,6 +4871,8 @@
   var utcFriday = utcWeekday(5);
   var utcSaturday = utcWeekday(6);
 
+  var utcSundays = utcSunday.range;
+
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
     date.setUTCHours(0, 0, 0, 0);
@@ -4890,6 +4883,7 @@
   }, function(date) {
     return date.getUTCMonth();
   });
+  var utcMonths = utcMonth.range;
 
   var utcYear = newInterval(function(date) {
     date.setUTCMonth(0, 1);
@@ -4912,6 +4906,7 @@
       date.setUTCFullYear(date.getUTCFullYear() + step * k);
     });
   };
+  var utcYears = utcYear.range;
 
   function localDate(d) {
     if (0 <= d.y && d.y < 100) {
@@ -5585,134 +5580,6 @@
   var parseIso = +new Date("2000-01-01T00:00:00.000Z")
       ? parseIsoNative
       : utcParse(isoSpecifier);
-
-  var durationSecond$1 = 1000,
-      durationMinute$1 = durationSecond$1 * 60,
-      durationHour$1 = durationMinute$1 * 60,
-      durationDay$1 = durationHour$1 * 24,
-      durationWeek$1 = durationDay$1 * 7,
-      durationMonth = durationDay$1 * 30,
-      durationYear = durationDay$1 * 365;
-
-  function date$1(t) {
-    return new Date(t);
-  }
-
-  function number$7(t) {
-    return t instanceof Date ? +t : +new Date(+t);
-  }
-
-  function calendar(year$$1, month$$1, week, day$$1, hour$$1, minute$$1, second$$1, millisecond$$1, format) {
-    var scale = continuous(deinterpolateLinear, interpolateNumber),
-        invert = scale.invert,
-        domain = scale.domain;
-
-    var formatMillisecond = format(".%L"),
-        formatSecond = format(":%S"),
-        formatMinute = format("%I:%M"),
-        formatHour = format("%I %p"),
-        formatDay = format("%a %d"),
-        formatWeek = format("%b %d"),
-        formatMonth = format("%B"),
-        formatYear = format("%Y");
-
-    var tickIntervals = [
-      [second$$1,  1,      durationSecond$1],
-      [second$$1,  5,  5 * durationSecond$1],
-      [second$$1, 15, 15 * durationSecond$1],
-      [second$$1, 30, 30 * durationSecond$1],
-      [minute$$1,  1,      durationMinute$1],
-      [minute$$1,  5,  5 * durationMinute$1],
-      [minute$$1, 15, 15 * durationMinute$1],
-      [minute$$1, 30, 30 * durationMinute$1],
-      [  hour$$1,  1,      durationHour$1  ],
-      [  hour$$1,  3,  3 * durationHour$1  ],
-      [  hour$$1,  6,  6 * durationHour$1  ],
-      [  hour$$1, 12, 12 * durationHour$1  ],
-      [   day$$1,  1,      durationDay$1   ],
-      [   day$$1,  2,  2 * durationDay$1   ],
-      [  week,  1,      durationWeek$1  ],
-      [ month$$1,  1,      durationMonth ],
-      [ month$$1,  3,  3 * durationMonth ],
-      [  year$$1,  1,      durationYear  ]
-    ];
-
-    function tickFormat(date$$1) {
-      return (second$$1(date$$1) < date$$1 ? formatMillisecond
-          : minute$$1(date$$1) < date$$1 ? formatSecond
-          : hour$$1(date$$1) < date$$1 ? formatMinute
-          : day$$1(date$$1) < date$$1 ? formatHour
-          : month$$1(date$$1) < date$$1 ? (week(date$$1) < date$$1 ? formatDay : formatWeek)
-          : year$$1(date$$1) < date$$1 ? formatMonth
-          : formatYear)(date$$1);
-    }
-
-    function tickInterval(interval, start, stop, step) {
-      if (interval == null) interval = 10;
-
-      // If a desired tick count is specified, pick a reasonable tick interval
-      // based on the extent of the domain and a rough estimate of tick size.
-      // Otherwise, assume interval is already a time interval and use it.
-      if (typeof interval === "number") {
-        var target = Math.abs(stop - start) / interval,
-            i = bisector$4(function(i) { return i[2]; }).right(tickIntervals, target);
-        if (i === tickIntervals.length) {
-          step = tickStep$4(start / durationYear, stop / durationYear, interval);
-          interval = year$$1;
-        } else if (i) {
-          i = tickIntervals[target / tickIntervals[i - 1][2] < tickIntervals[i][2] / target ? i - 1 : i];
-          step = i[1];
-          interval = i[0];
-        } else {
-          step = Math.max(tickStep$4(start, stop, interval), 1);
-          interval = millisecond$$1;
-        }
-      }
-
-      return step == null ? interval : interval.every(step);
-    }
-
-    scale.invert = function(y) {
-      return new Date(invert(y));
-    };
-
-    scale.domain = function(_) {
-      return arguments.length ? domain(map$6.call(_, number$7)) : domain().map(date$1);
-    };
-
-    scale.ticks = function(interval, step) {
-      var d = domain(),
-          t0 = d[0],
-          t1 = d[d.length - 1],
-          r = t1 < t0,
-          t;
-      if (r) t = t0, t0 = t1, t1 = t;
-      t = tickInterval(interval, t0, t1, step);
-      t = t ? t.range(t0, t1 + 1) : []; // inclusive stop
-      return r ? t.reverse() : t;
-    };
-
-    scale.tickFormat = function(count, specifier) {
-      return specifier == null ? tickFormat : format(specifier);
-    };
-
-    scale.nice = function(interval, step) {
-      var d = domain();
-      return (interval = tickInterval(interval, d[0], d[d.length - 1], step))
-          ? domain(nice(d, interval))
-          : scale;
-    };
-
-    scale.copy = function() {
-      return copy(scale, calendar(year$$1, month$$1, week, day$$1, hour$$1, minute$$1, second$$1, millisecond$$1, format));
-    };
-
-    return scale;
-  }
-
-  function time() {
-    return calendar(year, month, sunday, day, hour, minute, second, millisecond, timeFormat).domain([new Date(2000, 0, 1), new Date(2000, 0, 2)]);
-  }
 
   function colors(specifier) {
     var n = specifier.length / 6 | 0, colors = new Array(n), i = 0;
@@ -7211,518 +7078,8 @@
       }
   }
 
-  class CanvasTimeSeriesPlot extends CanvasDataPlot {
-      constructor(parentElement, canvasDimensions, config = {}) {
-          super(parentElement, canvasDimensions, config);
-          this.config = config || {};
-          this.informationDensity = [];
-          this.plotLineWidth = config.plotLineWidth || 1;
-          this.maxInformationDensity = config.maxInformationDensity || 2.0;
-          this.showMarkerDensity = config.showMarkerDensity || 0.14;
-          this.setupXScaleAndAxis();
-      }
-      addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
-          this.informationDensity.push(1);
-          super.addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData);
-      }
-      removeDataSet(uniqueID) {
-          var index = this.dataIDs.indexOf(uniqueID);
-          if (index >= 0) {
-              this.informationDensity.splice(index, 1);
-          }
-          this.removeDataSet.call(this, uniqueID);
-      }
-      updateDisplayIndices() {
-          var nDataSets = this.data.length;
-          for (var i = 0; i < nDataSets; ++i) {
-              var d = this.data[i];
-              if (d.length < 1) {
-                  continue;
-              }
-              var iStart = this.displayIndexStart[i];
-              var iEnd = this.displayIndexEnd[i];
-              var iLength = iEnd - iStart + 1;
-              var scaleLength = Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
-              this.informationDensity[i] = iLength / scaleLength;
-          }
-      }
-      updateTooltip() {
-          var mouse$$1 = mouse(this.div.node());
-          var mx = mouse$$1[0] - this.margin.left;
-          var my = mouse$$1[1] - this.margin.top;
-          if (mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
-              this.removeTooltip();
-              return;
-          }
-          var nDataSets = this.data.length;
-          var hitMarker = false;
-          TimeSeriesPlot_updateTooltip_graph_loop: for (var i = 0; i < nDataSets; ++i) {
-              if (this.informationDensity[i] > this.showMarkerDensity) {
-                  continue;
-              }
-              var d = this.data[i];
-              var iStart = this.displayIndexStart[i];
-              var iEnd = Math.min(d.length - 1, this.displayIndexEnd[i] + 1);
-              for (var j = iStart; j <= iEnd; ++j) {
-                  var dx = this.xScale(d[j][0]) - mx;
-                  var dy = this.yScale(d[j][1]) - my;
-                  if (dx * dx + dy * dy <= this.tooltipRadiusSquared) {
-                      hitMarker = true;
-                      this.showTooltip([this.xScale(d[j][0]),
-                          this.yScale(d[j][1])], this.dataColors[i], this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
-                      break TimeSeriesPlot_updateTooltip_graph_loop;
-                  }
-              }
-          }
-          if (!hitMarker) {
-              this.removeTooltip();
-          }
-      }
-      getTooltipStringX(dataPoint) {
-          var zeroPad2 = function (n) {
-              return n < 10 ? ("0" + n) : n.toString();
-          };
-          var date$$1 = dataPoint[0];
-          var Y = date$$1.getUTCFullYear();
-          var M = zeroPad2(date$$1.getUTCMonth());
-          var D = zeroPad2(date$$1.getUTCDay());
-          var h = zeroPad2(date$$1.getUTCHours());
-          var m = zeroPad2(date$$1.getUTCMinutes());
-          var s = zeroPad2(date$$1.getUTCSeconds());
-          return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
-      }
-      addDays(date$$1, days$$1) {
-          date$$1.setDate(date$$1.getDate() + days$$1);
-          return date$$1;
-      }
-      randomDate(start, end) {
-          return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-      }
-      calculateXDomain() {
-          var dates = [];
-          let nonEmptySets = [];
-          this.data.forEach(ds => {
-              if (ds && ds.length > 0) {
-                  nonEmptySets.push(ds);
-              }
-          });
-          nonEmptySets.forEach(dataPoint => {
-              dataPoint.forEach(point$$1 => {
-                  dates.push(point$$1[0]);
-              });
-          });
-          if (dates.length === 0) {
-              for (var i = 1; i < 100; i++) {
-                  dates.push(this.randomDate(new Date(2015, 2, 23), new Date()));
-              }
-          }
-          dates = Array.from(new Set(dates));
-          var min$$1 = dates.reduce(function (a, b) { return a < b ? a : b; });
-          var max$$1 = dates.reduce(function (a, b) { return a > b ? a : b; });
-          max$$1 = max$$1 <= min$$1 ? this.addDays(max$$1, 5) : max$$1;
-          return [min$$1, max$$1];
-      }
-      setupXScaleAndAxis() {
-          this.xScale = time()
-              .domain(this.calculateXDomain())
-              .range([0, this.width])
-              .nice()
-              .clamp(true);
-          var formatMilliSecond = timeFormat(".%L"), formatSecond = timeFormat(":%S"), formatHour = timeFormat("%I:%p"), formatWeek = timeFormat("%b %d"), formatMonth = timeFormat("%B"), formatYear = timeFormat("%Y");
-          let multiFormat = (date$$1) => {
-              return (second(date$$1) < date$$1 ? formatMilliSecond
-                  : minute(date$$1) < date$$1 ? formatSecond
-                      : day(date$$1) < date$$1 ? formatHour
-                          : sunday(date$$1) < date$$1 ? formatWeek
-                              : year(date$$1) < date$$1 ? formatMonth
-                                  : formatYear)(date$$1);
-          };
-          this.xAxis = axisBottom(this.xScale)
-              .tickFormat(multiFormat)
-              .ticks(Math.round(this.xTicksPerPixel * this.width));
-      }
-      drawDataSet(dataIndex) {
-          var d = this.data[dataIndex];
-          if (d.length < 1) {
-              return;
-          }
-          // var firstElem = this.calculateXDomain()[0]
-          // var last = this.calculateXDomain()[1]
-          // console.log(firstElem)
-          // console.log(this.xScale(firstElem))
-          // console.log(this.xScale(last))
-          // console.log("last: "+last)
-          var iStart = this.displayIndexStart[dataIndex];
-          var iEnd = this.displayIndexEnd[dataIndex];
-          var informationDensity = this.informationDensity[dataIndex];
-          var drawEvery = 1;
-          if (informationDensity > this.maxInformationDensity) {
-              drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
-          }
-          //Make iStart divisivble by drawEvery to prevent flickering graphs while panning
-          iStart = Math.max(0, iStart - iStart % drawEvery);
-          this.canvas.beginPath();
-          this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-          // console.log("istart "+d[iStart][0])
-          // console.log(this.xScale(d[iStart][0])) // bad reference ...xscale is missbehaving....
-          for (var i = iStart; i <= iEnd; i = i + drawEvery) {
-              this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
-          }
-          var iLast = Math.min(d.length - 1, iEnd + drawEvery);
-          this.canvas.lineTo(this.xScale(d[iLast][0]), this.yScale(d[iLast][1]));
-          this.canvas.lineWidth = this.plotLineWidth;
-          this.canvas.strokeStyle = this.dataColors[dataIndex];
-          this.canvas.stroke();
-          if (informationDensity <= this.showMarkerDensity) {
-              this.canvas.lineWidth = this.markerLineWidth;
-              for (var i = iStart; i <= iLast; ++i) {
-                  this.canvas.beginPath();
-                  this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]), this.markerRadius, 0, 2 * Math.PI);
-                  this.canvas.stroke();
-              }
-          }
-      }
-  }
+  exports.CanvasDataPlot = CanvasDataPlot;
 
-  class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
-      constructor(parentElement, canvasDimensions, config = {}) {
-          super(parentElement, canvasDimensions, config);
-          this.vectorScale = config.vectorScale || 2.0e5;
-          this.scaleUnits = config.scaleUnits || "units";
-          this.scaleLength = config.scaleLength || 75;
-          this.scaleTextElem = null;
-          var configCopy = this.CanvasPlot_shallowObjectCopy(config);
-          //configCopy["showTooltips"] = false;
-          if (!("invertYAxis" in configCopy)) {
-              configCopy["invertYAxis"] = true;
-          }
-      }
-      // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
-      getTooltipStringY(dataPoint) {
-          var roundConst = 100;
-          var dir = Math.round(roundConst * 180 / Math.PI * (dataPoint[1] % (2 * Math.PI))) / roundConst;
-          var mag = Math.round(roundConst * dataPoint[1]) / roundConst;
-          return "y = " + dataPoint[1] + "; dir = " + dir + "; mag = " + mag;
-      }
-      getMagnitudeScale() {
-          var xDomain = this.getXDomain();
-          return this.vectorScale * this.width / (xDomain[1] - xDomain[0]);
-      }
-      drawCanvas() {
-          this.updateScaleText();
-          CanvasTimeSeriesPlot.prototype.drawCanvas.call(this);
-      }
-      drawDataSet(dataIndex) {
-          var d = this.data[dataIndex];
-          if (d.length < 1) {
-              return;
-          }
-          var iStart = this.displayIndexStart[dataIndex];
-          var iEnd = this.displayIndexEnd[dataIndex];
-          var informationDensity = this.informationDensity[dataIndex];
-          var drawEvery = 1;
-          if (informationDensity > this.maxInformationDensity) {
-              drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
-          }
-          // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
-          iStart = Math.max(0, iStart - drawEvery - iStart % drawEvery);
-          iEnd = Math.min(d.length - 1, iEnd + drawEvery);
-          this.canvas.lineWidth = this.plotLineWidth;
-          this.canvas.strokeStyle = this.dataColors[dataIndex];
-          var magScale = this.getMagnitudeScale();
-          var tipSize = 10 * magScale;
-          for (var i = iStart; i <= iEnd; i = i + drawEvery) {
-              var startX = this.xScale(d[i][0]);
-              var startY = this.yScale(d[i][1]);
-              var dir = -1.0 * d[i][1] + 0.5 * Math.PI; // second index of d change to 1: get the data instead of the date 
-              var mag = magScale * d[i][1];
-              var cosDir = Math.cos(dir);
-              var sinDir = Math.sin(dir);
-              var endX = startX + mag * cosDir;
-              var endY = startY - mag * sinDir;
-              //var tipAngle = 0.1*Math.PI;
-              this.canvas.beginPath();
-              this.canvas.moveTo(startX, startY);
-              this.canvas.lineTo(endX, endY);
-              this.canvas.stroke();
-              this.canvas.beginPath();
-              this.canvas.moveTo(startX + (mag - tipSize) * cosDir - 0.5 * tipSize * sinDir, startY - ((mag - tipSize) * sinDir + 0.5 * tipSize * cosDir));
-              this.canvas.lineTo(endX, endY);
-              this.canvas.lineTo(startX + (mag - tipSize) * cosDir + 0.5 * tipSize * sinDir, startY - ((mag - tipSize) * sinDir - 0.5 * tipSize * cosDir));
-              this.canvas.stroke();
-          }
-      }
-      updateScaleText() {
-          if (this.disableLegend || !this.scaleTextElem) {
-              return;
-          }
-          var newLabel = (this.scaleLength / this.getMagnitudeScale()).toFixed(1) + this.scaleUnits;
-          this.scaleTextElem.text(newLabel);
-          var newLength = this.scaleTextElem.node().getComputedTextLength() + this.scaleLength + 3 * this.legendXPadding;
-          var lengthDiff = this.legendWidth - newLength;
-          if (lengthDiff < 0) {
-              this.legendWidth -= lengthDiff;
-              this.legendBG.attr("width", this.legendWidth);
-              this.legend
-                  .attr("transform", "translate(" + (this.width - this.legendWidth -
-                  this.legendMargin) + ", " + this.legendMargin + ")");
-          }
-      }
-      updateLegend() {
-          if (this.disableLegend) {
-              return;
-          }
-          CanvasDataPlot.prototype.updateLegend.call(this);
-          if (!this.legend) {
-              return;
-          }
-          var oldHeight = parseInt(this.legendBG.attr("height"));
-          var newHeight = oldHeight + this.legendYPadding + this.legendLineHeight;
-          this.legendBG.attr("height", newHeight);
-          this.legend.append("rect")
-              .attr("x", this.legendXPadding)
-              .attr("y", newHeight - Math.floor((this.legendYPadding + 0.5 * this.legendLineHeight)) + 1)
-              .attr("width", this.scaleLength)
-              .attr("height", 2)
-              .attr("fill", "black")
-              .attr("stroke", "none");
-          this.scaleTextElem = this.legend.append("text")
-              .attr("x", 2 * this.legendXPadding + this.scaleLength)
-              .attr("y", newHeight - this.legendYPadding);
-          this.updateScaleText();
-      }
-  }
-
-  class CanvasDataPlotGroup {
-      constructor(parentElement, plotDimensions, multiplePlots, syncPlots, defaultConfig = {}) {
-          this.defaultConfig = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(defaultConfig);
-          this.container = parentElement;
-          CanvasDataPlot.prototype.width = plotDimensions[0];
-          CanvasDataPlot.prototype.height = plotDimensions[1];
-          this.plots = [];
-          this.firstPlotType = "";
-          this.multiplePlots = multiplePlots;
-          this.syncPlots = syncPlots;
-          this.syncTranslateX = true;
-          this.syncTranslateY = false;
-          this.lastZoomedPlot = null;
-          this.zoomXAxis = true;
-          this.zoomYAxis = true;
-          this.defaultConfig["updateViewCallback"] = (this.multiplePlots ? (this.setViews).bind(this) : null);
-      }
-      addDataSet(plotType, uniqueID, displayName, dataSet, color, plotConfig) {
-          if (this.multiplePlots || this.plots.length < 1) {
-              var config = null;
-              if (plotConfig) {
-                  config = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(plotConfig);
-                  CanvasDataPlot.prototype.CanvasPlot_appendToObject(config, this.defaultConfig);
-              }
-              else {
-                  config = this.defaultConfig;
-              }
-              if (plotConfig && this.multiplePlots) {
-                  config["updateViewCallback"] = (this.setViews).bind(this);
-              }
-              var p = this.createPlot(plotType, config);
-              p.addDataSet(uniqueID, displayName, dataSet, color, false);
-              p.setZoomXAxis(this.zoomXAxis);
-              p.setZoomYAxis(this.zoomYAxis);
-              this.plots.push(p);
-              this.firstPlotType = plotType;
-              this.fitDataInViews();
-          }
-          else if (plotType === this.firstPlotType) {
-              this.plots[0].addDataSet(uniqueID, displayName, dataSet, color, true);
-          }
-      }
-      removeDataSet(uniqueID) {
-          if (this.multiplePlots) {
-              var nPlots = this.plots.length;
-              for (var i = 0; i < nPlots; ++i) {
-                  if (this.plots[i].getDataID(0) === uniqueID) {
-                      if (this.lastZoomedPlot === this.plots[i]) {
-                          this.lastZoomedPlot = null;
-                      }
-                      this.plots[i].destroy();
-                      this.plots.splice(i, 1);
-                      break;
-                  }
-              }
-          }
-          else if (this.plots.length > 0) {
-              this.plots[0].removeDataSet(uniqueID);
-          }
-      }
-      setSyncViews(sync, translateX, translateY) {
-          this.syncPlots = sync;
-          this.syncTranslateX = translateX;
-          this.syncTranslateY = translateY;
-          if (sync) {
-              if (this.lastZoomedPlot) {
-                  var xDomain = this.lastZoomedPlot.getXDomain();
-                  var yDomain = this.lastZoomedPlot.getYDomain();
-                  this.plots.forEach((function (p) {
-                      if (p != this.lastZoomedPlot) {
-                          p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
-                      }
-                  }).bind(this));
-              }
-              else {
-                  this.fitDataInViews();
-              }
-          }
-      }
-      setZoomXAxis(zoomX) {
-          this.zoomXAxis = zoomX;
-          this.plots.forEach(function (p) {
-              p.setZoomXAxis(zoomX);
-          });
-      }
-      setZoomYAxis(zoomY) {
-          this.zoomYAxis = zoomY;
-          this.plots.forEach(function (p) {
-              p.setZoomYAxis(zoomY);
-          });
-      }
-      fitDataInViews() {
-          if (this.plots.length < 1) {
-              return;
-          }
-          var xDomain = this.plots[0].calculateXDomain();
-          var yDomain = this.plots[0].calculateYDomain();
-          for (var i = 1; i < this.plots.length; ++i) {
-              var xDomainCandidate = this.plots[i].calculateXDomain();
-              var yDomainCandidate = this.plots[i].calculateYDomain();
-              if (xDomainCandidate[0] < xDomain[0]) {
-                  xDomain[0] = xDomainCandidate[0];
-              }
-              if (xDomainCandidate[1] > xDomain[1]) {
-                  xDomain[1] = xDomainCandidate[1];
-              }
-              if (yDomainCandidate[0] < yDomain[0]) {
-                  yDomain[0] = yDomainCandidate[0];
-              }
-              if (yDomainCandidate[1] > yDomain[1]) {
-                  yDomain[1] = yDomainCandidate[1];
-              }
-          }
-          this.plots.forEach(function (p) {
-              p.updateDomains(xDomain, yDomain, true);
-          });
-      }
-      resizePlots(dimensions) {
-          CanvasDataPlot.prototype.width = dimensions[0];
-          CanvasDataPlot.prototype.height = dimensions[1];
-          this.plots.forEach(function (p) {
-              p.resize(dimensions);
-          });
-      }
-      destroy() {
-          this.plots.forEach(function (p) {
-              p.destroy();
-          });
-          this.lastZoomedPlot = null;
-          this.plots = [];
-      }
-      createPlot(plotType, plotConfig) {
-          if (plotType === "CanvasTimeSeriesPlot") {
-              return new CanvasTimeSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
-          }
-          if (plotType === "CanvasVectorSeriesPlot") {
-              return new CanvasVectorSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
-          }
-          return new CanvasDataPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
-      }
-      setViews(except, xDomain, yDomain) {
-          this.lastZoomedPlot = except;
-          if (!this.syncPlots) {
-              return;
-          }
-          this.plots.forEach((function (p) {
-              if (p != except) {
-                  p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
-              }
-          }).bind(this));
-      }
-  }
-
-  function getDemoPlotSize() {
-      return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
-  }
-  function randomDate(start, end) {
-      return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-  }
-  $(document).ready(function () {
-      var data1 = [[1, 5], [0.5, 6], [5, 25], [6, 1], [10, 9],
-          [20, 55], [10, 32], [15, 25], [16, 19], [10, 89],
-          [27, 56], [18, 5], [15, 6], [72, 41]];
-      var plot1 = new CanvasDataPlot(select("#maincontainer"), [1000, 900], {
-          xAxisLabel: "IQ",
-          yAxisLabel: "Test Score",
-          markerLineWidth: 3,
-          markerRadius: 5
-      });
-      plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
-      plot1.addDataPoint("ds1", [15, 0]); // Will not be added! (x values have to be in ascending order)
-      plot1.addDataPoint("ds1", [20, 10]); // Will be added.
-      plot1.addDataPoint("ds1", [21, 0]);
-      plot1.updateDomains([-2, 22], [-60, 15], true);
-      var ts1 = [];
-      var ts2 = [];
-      // var now = new Date();
-      // for(var i=0; i<100; ++i) {
-      //     var time = new Date(now);
-      //     time.setHours(i);
-      //     ts1.push([time, Math.random()]);
-      //     ts2.push([time, Math.random()]);
-      // }
-      for (var i = 0; i < 100; ++i) {
-          ts1.push([randomDate(new Date(2010, 1, 1), new Date()), Math.random()]);
-          ts2.push([randomDate(new Date(2015, 12, 11), new Date()), Math.random()]);
-      }
-      var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
-          yAxisLabel: "Voltage [V]"
-      });
-      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
-      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
-      plot2.setZoomYAxis(false);
-      $(window).resize(function () {
-          plot2.resize(getDemoPlotSize());
-      });
-      // var time = new Date(now);
-      // time.setHours(101);
-      // var newDataPoint:[Date, number] = [time, 1.5];
-      // plot2.addDataPoint("ds1", newDataPoint, true, true);
-      // newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
-      var tsPlotGroup = new CanvasDataPlotGroup(select("#maincontainer"), getDemoPlotSize(), true, true, {});
-      tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
-          yAxisLabel: "Voltage [V]"
-      });
-      tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds2", "Signal 2", ts2, "steelblue", {
-          yAxisLabel: "Voltage [V]",
-          plotLineWidth: 1.5
-      });
-      tsPlotGroup.addDataSet("CanvasDataPlot", "ds3", "Signal 3", ts2, "blue", {
-          yAxisLabel: "Voltage [V]"
-      });
-      tsPlotGroup.removeDataSet("ds3");
-      tsPlotGroup.setSyncViews(true, true, false);
-      var plot3 = new CanvasVectorSeriesPlot(select("#maincontainer"), [750, 500], {
-          yAxisLabel: "Depth [m]",
-          maxInformationDensity: 0.3,
-          plotLineWidth: 1.5,
-          vectorScale: 7.0e5,
-          scaleUnits: "mm/s"
-      });
-      var tsVector1 = [];
-      for (var i = 0; i < 1000; ++i) {
-          var time$$1 = new Date(new Date());
-          time$$1.setHours(i);
-          // tsVector1.push([time, 50, 0.01*i*Math.PI, 100]);
-          tsVector1.push([time$$1, 0.01 * i * Math.PI]);
-      }
-      plot3.addDataSet("ts1", "Velocity", tsVector1, "steelblue", true);
-      plot3.setZoomYAxis(false);
-  });
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
