@@ -42,6 +42,44 @@
 
   var ascendingBisect = bisector(ascending);
 
+  function extent(values, valueof) {
+    var n = values.length,
+        i = -1,
+        value,
+        min,
+        max;
+
+    if (valueof == null) {
+      while (++i < n) { // Find the first comparable value.
+        if ((value = values[i]) != null && value >= value) {
+          min = max = value;
+          while (++i < n) { // Compare the remaining values.
+            if ((value = values[i]) != null) {
+              if (min > value) min = value;
+              if (max < value) max = value;
+            }
+          }
+        }
+      }
+    }
+
+    else {
+      while (++i < n) { // Find the first comparable value.
+        if ((value = valueof(values[i], i, values)) != null && value >= value) {
+          min = max = value;
+          while (++i < n) { // Compare the remaining values.
+            if ((value = valueof(values[i], i, values)) != null) {
+              if (min > value) min = value;
+              if (max < value) max = value;
+            }
+          }
+        }
+      }
+    }
+
+    return [min, max];
+  }
+
   function max(values, valueof) {
     var n = values.length,
         i = -1,
@@ -1150,17 +1188,6 @@
     return this;
   }
 
-  function customEvent(event1, listener, that, args) {
-    var event0 = event;
-    event1.sourceEvent = event;
-    event = event1;
-    try {
-      return listener.apply(that, args);
-    } finally {
-      event = event0;
-    }
-  }
-
   function dispatchEvent(node, type, params) {
     var window = defaultView(node),
         event = window.CustomEvent;
@@ -1269,49 +1296,6 @@
     var event = sourceEvent();
     if (event.changedTouches) event = event.changedTouches[0];
     return point(node, event);
-  }
-
-  function touch(node, touches, identifier) {
-    if (arguments.length < 3) identifier = touches, touches = sourceEvent().changedTouches;
-
-    for (var i = 0, n = touches ? touches.length : 0, touch; i < n; ++i) {
-      if ((touch = touches[i]).identifier === identifier) {
-        return point(node, touch);
-      }
-    }
-
-    return null;
-  }
-
-  function noevent() {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  }
-
-  function dragDisable(view) {
-    var root = view.document.documentElement,
-        selection$$1 = select(view).on("dragstart.drag", noevent, true);
-    if ("onselectstart" in root) {
-      selection$$1.on("selectstart.drag", noevent, true);
-    } else {
-      root.__noselect = root.style.MozUserSelect;
-      root.style.MozUserSelect = "none";
-    }
-  }
-
-  function yesdrag(view, noclick) {
-    var root = view.document.documentElement,
-        selection$$1 = select(view).on("dragstart.drag", null);
-    if (noclick) {
-      selection$$1.on("click.drag", noevent, true);
-      setTimeout(function() { selection$$1.on("click.drag", null); }, 0);
-    }
-    if ("onselectstart" in root) {
-      selection$$1.on("selectstart.drag", null);
-    } else {
-      root.style.MozUserSelect = root.__noselect;
-      delete root.__noselect;
-    }
   }
 
   function define(constructor, factory, prototype) {
@@ -2184,70 +2168,7 @@
   var interpolateTransformCss = interpolateTransform(parseCss, "px, ", "px)", "deg)");
   var interpolateTransformSvg = interpolateTransform(parseSvg, ", ", ")", ")");
 
-  var rho = Math.SQRT2,
-      rho2 = 2,
-      rho4 = 4,
-      epsilon2 = 1e-12;
-
-  function cosh(x) {
-    return ((x = Math.exp(x)) + 1 / x) / 2;
-  }
-
-  function sinh(x) {
-    return ((x = Math.exp(x)) - 1 / x) / 2;
-  }
-
-  function tanh(x) {
-    return ((x = Math.exp(2 * x)) - 1) / (x + 1);
-  }
-
-  // p0 = [ux0, uy0, w0]
-  // p1 = [ux1, uy1, w1]
-  function interpolateZoom(p0, p1) {
-    var ux0 = p0[0], uy0 = p0[1], w0 = p0[2],
-        ux1 = p1[0], uy1 = p1[1], w1 = p1[2],
-        dx = ux1 - ux0,
-        dy = uy1 - uy0,
-        d2 = dx * dx + dy * dy,
-        i,
-        S;
-
-    // Special case for u0 ≅ u1.
-    if (d2 < epsilon2) {
-      S = Math.log(w1 / w0) / rho;
-      i = function(t) {
-        return [
-          ux0 + t * dx,
-          uy0 + t * dy,
-          w0 * Math.exp(rho * t * S)
-        ];
-      };
-    }
-
-    // General case.
-    else {
-      var d1 = Math.sqrt(d2),
-          b0 = (w1 * w1 - w0 * w0 + rho4 * d2) / (2 * w0 * rho2 * d1),
-          b1 = (w1 * w1 - w0 * w0 - rho4 * d2) / (2 * w1 * rho2 * d1),
-          r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0),
-          r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1);
-      S = (r1 - r0) / rho;
-      i = function(t) {
-        var s = t * S,
-            coshr0 = cosh(r0),
-            u = w0 / (rho2 * d1) * (coshr0 * tanh(rho * s + r0) - sinh(r0));
-        return [
-          ux0 + u * dx,
-          uy0 + u * dy,
-          w0 * coshr0 / cosh(rho * s + r0)
-        ];
-      };
-    }
-
-    i.duration = S * 1000;
-
-    return i;
-  }
+  var rho = Math.SQRT2;
 
   function cubehelix$1(hue$$1) {
     return (function cubehelixGamma(y) {
@@ -4728,6 +4649,7 @@
       return (end - start) / k;
     });
   };
+  var milliseconds = millisecond.range;
 
   var durationSecond = 1e3;
   var durationMinute = 6e4;
@@ -4744,6 +4666,7 @@
   }, function(date) {
     return date.getUTCSeconds();
   });
+  var seconds = second.range;
 
   var minute = newInterval(function(date) {
     date.setTime(Math.floor(date / durationMinute) * durationMinute);
@@ -4754,6 +4677,7 @@
   }, function(date) {
     return date.getMinutes();
   });
+  var minutes = minute.range;
 
   var hour = newInterval(function(date) {
     var offset = date.getTimezoneOffset() * durationMinute % durationHour;
@@ -4766,6 +4690,7 @@
   }, function(date) {
     return date.getHours();
   });
+  var hours = hour.range;
 
   var day = newInterval(function(date) {
     date.setHours(0, 0, 0, 0);
@@ -4776,6 +4701,7 @@
   }, function(date) {
     return date.getDate() - 1;
   });
+  var days = day.range;
 
   function weekday(i) {
     return newInterval(function(date) {
@@ -4808,6 +4734,7 @@
   }, function(date) {
     return date.getMonth();
   });
+  var months = month.range;
 
   var year = newInterval(function(date) {
     date.setMonth(0, 1);
@@ -4830,6 +4757,7 @@
       date.setFullYear(date.getFullYear() + step * k);
     });
   };
+  var years = year.range;
 
   var utcMinute = newInterval(function(date) {
     date.setUTCSeconds(0, 0);
@@ -4840,6 +4768,7 @@
   }, function(date) {
     return date.getUTCMinutes();
   });
+  var utcMinutes = utcMinute.range;
 
   var utcHour = newInterval(function(date) {
     date.setUTCMinutes(0, 0, 0);
@@ -4850,6 +4779,7 @@
   }, function(date) {
     return date.getUTCHours();
   });
+  var utcHours = utcHour.range;
 
   var utcDay = newInterval(function(date) {
     date.setUTCHours(0, 0, 0, 0);
@@ -4860,6 +4790,7 @@
   }, function(date) {
     return date.getUTCDate() - 1;
   });
+  var utcDays = utcDay.range;
 
   function utcWeekday(i) {
     return newInterval(function(date) {
@@ -4880,6 +4811,8 @@
   var utcFriday = utcWeekday(5);
   var utcSaturday = utcWeekday(6);
 
+  var utcSundays = utcSunday.range;
+
   var utcMonth = newInterval(function(date) {
     date.setUTCDate(1);
     date.setUTCHours(0, 0, 0, 0);
@@ -4890,6 +4823,7 @@
   }, function(date) {
     return date.getUTCMonth();
   });
+  var utcMonths = utcMonth.range;
 
   var utcYear = newInterval(function(date) {
     date.setUTCMonth(0, 1);
@@ -4912,6 +4846,7 @@
       date.setUTCFullYear(date.getUTCFullYear() + step * k);
     });
   };
+  var utcYears = utcYear.range;
 
   function localDate(d) {
     if (0 <= d.y && d.y < 100) {
@@ -6210,490 +6145,13 @@
     bezierCurveTo: function(x1, y1, x2, y2, x, y) { this._context.bezierCurveTo(y1, x1, y2, x2, y, x); }
   };
 
-  function constant$h(x) {
-    return function() {
-      return x;
-    };
-  }
-
-  function ZoomEvent(target, type, transform) {
-    this.target = target;
-    this.type = type;
-    this.transform = transform;
-  }
-
-  function Transform(k, x, y) {
-    this.k = k;
-    this.x = x;
-    this.y = y;
-  }
-
-  Transform.prototype = {
-    constructor: Transform,
-    scale: function(k) {
-      return k === 1 ? this : new Transform(this.k * k, this.x, this.y);
-    },
-    translate: function(x, y) {
-      return x === 0 & y === 0 ? this : new Transform(this.k, this.x + this.k * x, this.y + this.k * y);
-    },
-    apply: function(point) {
-      return [point[0] * this.k + this.x, point[1] * this.k + this.y];
-    },
-    applyX: function(x) {
-      return x * this.k + this.x;
-    },
-    applyY: function(y) {
-      return y * this.k + this.y;
-    },
-    invert: function(location) {
-      return [(location[0] - this.x) / this.k, (location[1] - this.y) / this.k];
-    },
-    invertX: function(x) {
-      return (x - this.x) / this.k;
-    },
-    invertY: function(y) {
-      return (y - this.y) / this.k;
-    },
-    rescaleX: function(x) {
-      return x.copy().domain(x.range().map(this.invertX, this).map(x.invert, x));
-    },
-    rescaleY: function(y) {
-      return y.copy().domain(y.range().map(this.invertY, this).map(y.invert, y));
-    },
-    toString: function() {
-      return "translate(" + this.x + "," + this.y + ") scale(" + this.k + ")";
-    }
-  };
-
-  var identity$c = new Transform(1, 0, 0);
-
-  function nopropagation$2() {
-    event.stopImmediatePropagation();
-  }
-
-  function noevent$2() {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  }
-
-  // Ignore right-click, since that should open the context menu.
-  function defaultFilter$2() {
-    return !event.button;
-  }
-
-  function defaultExtent$1() {
-    var e = this, w, h;
-    if (e instanceof SVGElement) {
-      e = e.ownerSVGElement || e;
-      w = e.width.baseVal.value;
-      h = e.height.baseVal.value;
-    } else {
-      w = e.clientWidth;
-      h = e.clientHeight;
-    }
-    return [[0, 0], [w, h]];
-  }
-
-  function defaultTransform() {
-    return this.__zoom || identity$c;
-  }
-
-  function defaultWheelDelta() {
-    return -event.deltaY * (event.deltaMode ? 120 : 1) / 500;
-  }
-
-  function defaultTouchable$1() {
-    return "ontouchstart" in this;
-  }
-
-  function defaultConstrain(transform, extent, translateExtent) {
-    var dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0],
-        dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0],
-        dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1],
-        dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1];
-    return transform.translate(
-      dx1 > dx0 ? (dx0 + dx1) / 2 : Math.min(0, dx0) || Math.max(0, dx1),
-      dy1 > dy0 ? (dy0 + dy1) / 2 : Math.min(0, dy0) || Math.max(0, dy1)
-    );
-  }
-
-  function zoom() {
-    var filter = defaultFilter$2,
-        extent = defaultExtent$1,
-        constrain = defaultConstrain,
-        wheelDelta = defaultWheelDelta,
-        touchable = defaultTouchable$1,
-        scaleExtent = [0, Infinity],
-        translateExtent = [[-Infinity, -Infinity], [Infinity, Infinity]],
-        duration = 250,
-        interpolate = interpolateZoom,
-        gestures = [],
-        listeners = dispatch("start", "zoom", "end"),
-        touchstarting,
-        touchending,
-        touchDelay = 500,
-        wheelDelay = 150,
-        clickDistance2 = 0;
-
-    function zoom(selection$$1) {
-      selection$$1
-          .property("__zoom", defaultTransform)
-          .on("wheel.zoom", wheeled)
-          .on("mousedown.zoom", mousedowned)
-          .on("dblclick.zoom", dblclicked)
-        .filter(touchable)
-          .on("touchstart.zoom", touchstarted)
-          .on("touchmove.zoom", touchmoved)
-          .on("touchend.zoom touchcancel.zoom", touchended)
-          .style("touch-action", "none")
-          .style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
-    }
-
-    zoom.transform = function(collection, transform) {
-      var selection$$1 = collection.selection ? collection.selection() : collection;
-      selection$$1.property("__zoom", defaultTransform);
-      if (collection !== selection$$1) {
-        schedule(collection, transform);
-      } else {
-        selection$$1.interrupt().each(function() {
-          gesture(this, arguments)
-              .start()
-              .zoom(null, typeof transform === "function" ? transform.apply(this, arguments) : transform)
-              .end();
-        });
-      }
-    };
-
-    zoom.scaleBy = function(selection$$1, k) {
-      zoom.scaleTo(selection$$1, function() {
-        var k0 = this.__zoom.k,
-            k1 = typeof k === "function" ? k.apply(this, arguments) : k;
-        return k0 * k1;
-      });
-    };
-
-    zoom.scaleTo = function(selection$$1, k) {
-      zoom.transform(selection$$1, function() {
-        var e = extent.apply(this, arguments),
-            t0 = this.__zoom,
-            p0 = centroid(e),
-            p1 = t0.invert(p0),
-            k1 = typeof k === "function" ? k.apply(this, arguments) : k;
-        return constrain(translate(scale(t0, k1), p0, p1), e, translateExtent);
-      });
-    };
-
-    zoom.translateBy = function(selection$$1, x, y) {
-      zoom.transform(selection$$1, function() {
-        return constrain(this.__zoom.translate(
-          typeof x === "function" ? x.apply(this, arguments) : x,
-          typeof y === "function" ? y.apply(this, arguments) : y
-        ), extent.apply(this, arguments), translateExtent);
-      });
-    };
-
-    zoom.translateTo = function(selection$$1, x, y) {
-      zoom.transform(selection$$1, function() {
-        var e = extent.apply(this, arguments),
-            t = this.__zoom,
-            p = centroid(e);
-        return constrain(identity$c.translate(p[0], p[1]).scale(t.k).translate(
-          typeof x === "function" ? -x.apply(this, arguments) : -x,
-          typeof y === "function" ? -y.apply(this, arguments) : -y
-        ), e, translateExtent);
-      });
-    };
-
-    function scale(transform, k) {
-      k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], k));
-      return k === transform.k ? transform : new Transform(k, transform.x, transform.y);
-    }
-
-    function translate(transform, p0, p1) {
-      var x = p0[0] - p1[0] * transform.k, y = p0[1] - p1[1] * transform.k;
-      return x === transform.x && y === transform.y ? transform : new Transform(transform.k, x, y);
-    }
-
-    function centroid(extent) {
-      return [(+extent[0][0] + +extent[1][0]) / 2, (+extent[0][1] + +extent[1][1]) / 2];
-    }
-
-    function schedule(transition$$1, transform, center) {
-      transition$$1
-          .on("start.zoom", function() { gesture(this, arguments).start(); })
-          .on("interrupt.zoom end.zoom", function() { gesture(this, arguments).end(); })
-          .tween("zoom", function() {
-            var that = this,
-                args = arguments,
-                g = gesture(that, args),
-                e = extent.apply(that, args),
-                p = center || centroid(e),
-                w = Math.max(e[1][0] - e[0][0], e[1][1] - e[0][1]),
-                a = that.__zoom,
-                b = typeof transform === "function" ? transform.apply(that, args) : transform,
-                i = interpolate(a.invert(p).concat(w / a.k), b.invert(p).concat(w / b.k));
-            return function(t) {
-              if (t === 1) t = b; // Avoid rounding error on end.
-              else { var l = i(t), k = w / l[2]; t = new Transform(k, p[0] - l[0] * k, p[1] - l[1] * k); }
-              g.zoom(null, t);
-            };
-          });
-    }
-
-    function gesture(that, args) {
-      for (var i = 0, n = gestures.length, g; i < n; ++i) {
-        if ((g = gestures[i]).that === that) {
-          return g;
-        }
-      }
-      return new Gesture(that, args);
-    }
-
-    function Gesture(that, args) {
-      this.that = that;
-      this.args = args;
-      this.index = -1;
-      this.active = 0;
-      this.extent = extent.apply(that, args);
-    }
-
-    Gesture.prototype = {
-      start: function() {
-        if (++this.active === 1) {
-          this.index = gestures.push(this) - 1;
-          this.emit("start");
-        }
-        return this;
-      },
-      zoom: function(key, transform) {
-        if (this.mouse && key !== "mouse") this.mouse[1] = transform.invert(this.mouse[0]);
-        if (this.touch0 && key !== "touch") this.touch0[1] = transform.invert(this.touch0[0]);
-        if (this.touch1 && key !== "touch") this.touch1[1] = transform.invert(this.touch1[0]);
-        this.that.__zoom = transform;
-        this.emit("zoom");
-        return this;
-      },
-      end: function() {
-        if (--this.active === 0) {
-          gestures.splice(this.index, 1);
-          this.index = -1;
-          this.emit("end");
-        }
-        return this;
-      },
-      emit: function(type) {
-        customEvent(new ZoomEvent(zoom, type, this.that.__zoom), listeners.apply, listeners, [type, this.that, this.args]);
-      }
-    };
-
-    function wheeled() {
-      if (!filter.apply(this, arguments)) return;
-      var g = gesture(this, arguments),
-          t = this.__zoom,
-          k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], t.k * Math.pow(2, wheelDelta.apply(this, arguments)))),
-          p = mouse(this);
-
-      // If the mouse is in the same location as before, reuse it.
-      // If there were recent wheel events, reset the wheel idle timeout.
-      if (g.wheel) {
-        if (g.mouse[0][0] !== p[0] || g.mouse[0][1] !== p[1]) {
-          g.mouse[1] = t.invert(g.mouse[0] = p);
-        }
-        clearTimeout(g.wheel);
-      }
-
-      // If this wheel event won’t trigger a transform change, ignore it.
-      else if (t.k === k) return;
-
-      // Otherwise, capture the mouse point and location at the start.
-      else {
-        g.mouse = [p, t.invert(p)];
-        interrupt(this);
-        g.start();
-      }
-
-      noevent$2();
-      g.wheel = setTimeout(wheelidled, wheelDelay);
-      g.zoom("mouse", constrain(translate(scale(t, k), g.mouse[0], g.mouse[1]), g.extent, translateExtent));
-
-      function wheelidled() {
-        g.wheel = null;
-        g.end();
-      }
-    }
-
-    function mousedowned() {
-      if (touchending || !filter.apply(this, arguments)) return;
-      var g = gesture(this, arguments),
-          v = select(event.view).on("mousemove.zoom", mousemoved, true).on("mouseup.zoom", mouseupped, true),
-          p = mouse(this),
-          x0 = event.clientX,
-          y0 = event.clientY;
-
-      dragDisable(event.view);
-      nopropagation$2();
-      g.mouse = [p, this.__zoom.invert(p)];
-      interrupt(this);
-      g.start();
-
-      function mousemoved() {
-        noevent$2();
-        if (!g.moved) {
-          var dx = event.clientX - x0, dy = event.clientY - y0;
-          g.moved = dx * dx + dy * dy > clickDistance2;
-        }
-        g.zoom("mouse", constrain(translate(g.that.__zoom, g.mouse[0] = mouse(g.that), g.mouse[1]), g.extent, translateExtent));
-      }
-
-      function mouseupped() {
-        v.on("mousemove.zoom mouseup.zoom", null);
-        yesdrag(event.view, g.moved);
-        noevent$2();
-        g.end();
-      }
-    }
-
-    function dblclicked() {
-      if (!filter.apply(this, arguments)) return;
-      var t0 = this.__zoom,
-          p0 = mouse(this),
-          p1 = t0.invert(p0),
-          k1 = t0.k * (event.shiftKey ? 0.5 : 2),
-          t1 = constrain(translate(scale(t0, k1), p0, p1), extent.apply(this, arguments), translateExtent);
-
-      noevent$2();
-      if (duration > 0) select(this).transition().duration(duration).call(schedule, t1, p0);
-      else select(this).call(zoom.transform, t1);
-    }
-
-    function touchstarted() {
-      if (!filter.apply(this, arguments)) return;
-      var g = gesture(this, arguments),
-          touches$$1 = event.changedTouches,
-          started,
-          n = touches$$1.length, i, t, p;
-
-      nopropagation$2();
-      for (i = 0; i < n; ++i) {
-        t = touches$$1[i], p = touch(this, touches$$1, t.identifier);
-        p = [p, this.__zoom.invert(p), t.identifier];
-        if (!g.touch0) g.touch0 = p, started = true;
-        else if (!g.touch1) g.touch1 = p;
-      }
-
-      // If this is a dbltap, reroute to the (optional) dblclick.zoom handler.
-      if (touchstarting) {
-        touchstarting = clearTimeout(touchstarting);
-        if (!g.touch1) {
-          g.end();
-          p = select(this).on("dblclick.zoom");
-          if (p) p.apply(this, arguments);
-          return;
-        }
-      }
-
-      if (started) {
-        touchstarting = setTimeout(function() { touchstarting = null; }, touchDelay);
-        interrupt(this);
-        g.start();
-      }
-    }
-
-    function touchmoved() {
-      var g = gesture(this, arguments),
-          touches$$1 = event.changedTouches,
-          n = touches$$1.length, i, t, p, l;
-
-      noevent$2();
-      if (touchstarting) touchstarting = clearTimeout(touchstarting);
-      for (i = 0; i < n; ++i) {
-        t = touches$$1[i], p = touch(this, touches$$1, t.identifier);
-        if (g.touch0 && g.touch0[2] === t.identifier) g.touch0[0] = p;
-        else if (g.touch1 && g.touch1[2] === t.identifier) g.touch1[0] = p;
-      }
-      t = g.that.__zoom;
-      if (g.touch1) {
-        var p0 = g.touch0[0], l0 = g.touch0[1],
-            p1 = g.touch1[0], l1 = g.touch1[1],
-            dp = (dp = p1[0] - p0[0]) * dp + (dp = p1[1] - p0[1]) * dp,
-            dl = (dl = l1[0] - l0[0]) * dl + (dl = l1[1] - l0[1]) * dl;
-        t = scale(t, Math.sqrt(dp / dl));
-        p = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
-        l = [(l0[0] + l1[0]) / 2, (l0[1] + l1[1]) / 2];
-      }
-      else if (g.touch0) p = g.touch0[0], l = g.touch0[1];
-      else return;
-      g.zoom("touch", constrain(translate(t, p, l), g.extent, translateExtent));
-    }
-
-    function touchended() {
-      var g = gesture(this, arguments),
-          touches$$1 = event.changedTouches,
-          n = touches$$1.length, i, t;
-
-      nopropagation$2();
-      if (touchending) clearTimeout(touchending);
-      touchending = setTimeout(function() { touchending = null; }, touchDelay);
-      for (i = 0; i < n; ++i) {
-        t = touches$$1[i];
-        if (g.touch0 && g.touch0[2] === t.identifier) delete g.touch0;
-        else if (g.touch1 && g.touch1[2] === t.identifier) delete g.touch1;
-      }
-      if (g.touch1 && !g.touch0) g.touch0 = g.touch1, delete g.touch1;
-      if (g.touch0) g.touch0[1] = this.__zoom.invert(g.touch0[0]);
-      else g.end();
-    }
-
-    zoom.wheelDelta = function(_) {
-      return arguments.length ? (wheelDelta = typeof _ === "function" ? _ : constant$h(+_), zoom) : wheelDelta;
-    };
-
-    zoom.filter = function(_) {
-      return arguments.length ? (filter = typeof _ === "function" ? _ : constant$h(!!_), zoom) : filter;
-    };
-
-    zoom.touchable = function(_) {
-      return arguments.length ? (touchable = typeof _ === "function" ? _ : constant$h(!!_), zoom) : touchable;
-    };
-
-    zoom.extent = function(_) {
-      return arguments.length ? (extent = typeof _ === "function" ? _ : constant$h([[+_[0][0], +_[0][1]], [+_[1][0], +_[1][1]]]), zoom) : extent;
-    };
-
-    zoom.scaleExtent = function(_) {
-      return arguments.length ? (scaleExtent[0] = +_[0], scaleExtent[1] = +_[1], zoom) : [scaleExtent[0], scaleExtent[1]];
-    };
-
-    zoom.translateExtent = function(_) {
-      return arguments.length ? (translateExtent[0][0] = +_[0][0], translateExtent[1][0] = +_[1][0], translateExtent[0][1] = +_[0][1], translateExtent[1][1] = +_[1][1], zoom) : [[translateExtent[0][0], translateExtent[0][1]], [translateExtent[1][0], translateExtent[1][1]]];
-    };
-
-    zoom.constrain = function(_) {
-      return arguments.length ? (constrain = _, zoom) : constrain;
-    };
-
-    zoom.duration = function(_) {
-      return arguments.length ? (duration = +_, zoom) : duration;
-    };
-
-    zoom.interpolate = function(_) {
-      return arguments.length ? (interpolate = _, zoom) : interpolate;
-    };
-
-    zoom.on = function() {
-      var value = listeners.on.apply(listeners, arguments);
-      return value === listeners ? zoom : value;
-    };
-
-    zoom.clickDistance = function(_) {
-      return arguments.length ? (clickDistance2 = (_ = +_) * _, zoom) : Math.sqrt(clickDistance2);
-    };
-
-    return zoom;
-  }
-
-  class CanvasDataPlot {
+  class CanvasTimeSeriesPlot {
       constructor(parentElement, canvasDimensions, config = {}) {
+          this.config = config || {};
+          this.informationDensity = [];
+          this.plotLineWidth = config.plotLineWidth || 1;
+          this.maxInformationDensity = config.maxInformationDensity || 2.0;
+          this.showMarkerDensity = config.showMarkerDensity || 0.14;
           this.parent = parentElement;
           this.canvasDimensions = canvasDimensions;
           this.config = config;
@@ -6728,7 +6186,7 @@
           this.totalHeight = Math.max(this.minCanvasHeight, canvasDimensions[1]);
           this.width = this.totalWidth - this.margin.left - this.margin.right;
           this.height = this.totalHeight - this.margin.top - this.margin.bottom;
-          this.zoomListener = zoom().on("zoom", this.zoomFunction);
+          // this.zoomListener = d3.zoom().on("zoom", this.zoomFunction);
           //Append to the selected HTMLElement a div with the listed properties
           this.div = this.parent.append("div")
               .attr("class", "cvpChart")
@@ -6746,10 +6204,6 @@
               .attr("height", this.totalHeight);
           this.svgTranslateGroup = this.svg.append("g")
               .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
-          this.xScale = null;
-          this.yScale = null;
-          this.xAxis = null;
-          this.yAxis = null;
           this.setupXScaleAndAxis();
           this.setupYScaleAndAxis();
           this.yAxisGroup = this.svgTranslateGroup.append("g")
@@ -6787,12 +6241,11 @@
           }
           this.xAxisZoom = true;
           this.yAxisZoom = true;
-          this.drawCanvas();
-          this.resetZoomListenerAxes();
+          // this.drawCanvas();
+          // this.resetZoomListenerAxes();   
       }
-      // to be implement later
-      zoomFunction() { }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
+          this.informationDensity.push(1);
           this.dataIDs.push(uniqueID);
           this.dataLabels.push(label);
           this.dataColors.push(colorString);
@@ -6820,47 +6273,6 @@
               this.drawCanvas();
           }
       }
-      addDataPoint(uniqueID, dataPoint, updateDomains, copyData) {
-          let i = this.dataIDs.indexOf(uniqueID);
-          if (i < 0 || (this.data[i].length > 0 && this.data[i][this.data[i].length - 1][0] > dataPoint[0])) {
-              return;
-          }
-          this.data[i].push(copyData ? jQuery.extend(true, {}, dataPoint) : dataPoint);
-          if (updateDomains) {
-              this.updateDomains(this.calculateXDomain(), this.calculateYDomain(), true);
-          }
-          else {
-              this.updateDisplayIndices();
-              this.drawCanvas();
-          }
-      }
-      removeDataSet(uniqueID) {
-          let index = this.dataIDs.indexOf(uniqueID);
-          if (index >= 0) {
-              this.data.splice(index, 1);
-              this.dataIDs.splice(index, 1);
-              this.dataLabels.splice(index, 1);
-              this.displayIndexStart.splice(index, 1);
-              this.displayIndexEnd.splice(index, 1);
-              this.dataColors.splice(index, 1);
-              this.updateLegend();
-              this.drawCanvas();
-          }
-      }
-      setZoomXAxis(zoomX) {
-          if (this.xAxisZoom == zoomX) {
-              return;
-          }
-          this.xAxisZoom = zoomX;
-          this.resetZoomListenerAxes();
-      }
-      setZoomYAxis(zoomY) {
-          if (this.yAxisZoom == zoomY) {
-              return;
-          }
-          this.yAxisZoom = zoomY;
-          this.resetZoomListenerAxes();
-      }
       resize(dimensions) {
           this.totalWidth = Math.max(this.minCanvasWidth, dimensions[0]);
           this.totalHeight = Math.max(this.minCanvasHeight, dimensions[1]);
@@ -6873,8 +6285,8 @@
           this.svg.attr("width", this.totalWidth)
               .attr("height", this.totalHeight);
           //check this if something going wrong with the scale
-          this.xScale = linear$2().range([0, this.width]);
-          this.yScale = linear$2().range([this.height, 0]);
+          this.xScale = time().rangeRound([0, this.width]);
+          this.yScale = linear$2().rangeRound([this.height, 0]);
           this.xAxis
               .ticks(Math.round(this.xTicksPerPixel * this.width));
           this.yAxis
@@ -6895,167 +6307,27 @@
                   .attr("transform", "translate(" + (this.width - this.legendWidth - this.legendMargin) + ", " + this.legendMargin + ")");
           }
           this.updateDisplayIndices();
-          this.resetZoomListenerAxes();
-          this.redrawCanvasAndAxes();
+          // this.resetZoomListenerAxes();
+          this.drawCanvas();
       }
       updateDomains(xDomain, yDomain, makeItNice) {
-          this.xScale = linear$2().domain(xDomain);
+          this.xScale = time().domain(xDomain);
           this.yScale = linear$2().domain(yDomain);
           if (makeItNice) {
-              this.xScale = linear$2().nice();
+              this.xScale = time().nice();
               this.yScale = linear$2().nice();
           }
           this.updateDisplayIndices();
-          this.resetZoomListenerAxes();
-          this.redrawCanvasAndAxes();
+          // this.resetZoomListenerAxes();
+          this.drawCanvas();
       }
-      getXDomain() {
-          return this.xScale.domain();
-      }
-      getYDomain() {
-          return this.yScale.domain();
-      }
-      calculateXDomain() {
-          let nonEmptySets = [];
-          this.data.forEach(ds => {
-              if (ds.length !== 0 && ds.length > 0) {
-                  nonEmptySets.push(ds);
-              }
-          });
-          if (nonEmptySets.length < 1) {
-              return [0, 1];
-          }
-          var min$$1 = nonEmptySets[0][0][0];
-          var max$$1 = nonEmptySets[0][nonEmptySets[0].length - 1][0];
-          for (var i = 1; i < nonEmptySets.length; ++i) {
-              var minCandidate = nonEmptySets[i][0][0];
-              var maxCandidate = nonEmptySets[i][nonEmptySets[i].length - 1][0];
-              min$$1 = minCandidate < min$$1 ? minCandidate : min$$1;
-              max$$1 = max$$1 < maxCandidate ? maxCandidate : max$$1;
-          }
-          // if(max-min <= 0) {
-          // 	min = 1*max; //NOTE: 1* is neceseccary to handle Dates in derived classes.
-          // 	max = min+1;
-          // }
-          if (max$$1 - min$$1 <= 0) {
-              min$$1 = max$$1 - 1;
-              max$$1 += 1;
-          }
-          return [min$$1, max$$1];
-      }
-      calculateYDomain() {
-          let nonEmptySets = [];
-          this.data.forEach(ds => {
-              if (ds && ds.length > 0) {
-                  nonEmptySets.push(ds);
-              }
-          });
-          if (nonEmptySets.length < 1) {
-              return [0, 1];
-          }
-          var min$$1 = min(nonEmptySets[0], function (d) { return d[1]; });
-          var max$$1 = max(nonEmptySets[0], function (d) { return d[1]; });
-          for (var i = 1; i < nonEmptySets.length; ++i) {
-              min$$1 = Math.min(min$$1, min(nonEmptySets[i], function (d) { return d[1]; }));
-              max$$1 = Math.max(max$$1, max(nonEmptySets[i], function (d) { return d[1]; }));
-          }
-          if (max$$1 - min$$1 <= 0) {
-              min$$1 = max$$1 - 1;
-              max$$1 += 1;
-          }
-          return [min$$1, max$$1];
-      }
-      destroy() {
-          this.div.remove();
-      }
-      setupXScaleAndAxis() {
-          this.xScale = linear$2()
-              .domain(this.calculateXDomain())
-              .range([0, this.width])
-              .nice()
-              .clamp(true);
-          this.xAxis = axisBottom(this.xScale)
-              .ticks(Math.round(this.xTicksPerPixel * this.width));
-      }
-      setupYScaleAndAxis() {
-          this.yScale = linear$2()
-              .domain(this.calculateYDomain())
-              .range(this.invertYAxis ? [0, this.height] : [this.height, 0])
-              .nice()
-              .clamp(true);
-          this.yAxis = axisLeft(this.yScale)
-              .ticks(Math.round(this.yTicksPerPixel * this.height));
-      }
-      getDataID(index) {
-          return (this.dataIDs.length > index ? String(this.dataIDs[index]) : "");
-      }
-      updateTooltip() {
-          var mouse$$1 = mouse(this.div.node());
-          var mx = mouse$$1[0] - this.margin.left;
-          var my = mouse$$1[1] - this.margin.top;
-          if (mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
-              this.removeTooltip();
-              return;
-          }
+      drawCanvas() {
+          this.canvas.clearRect(0, 0, this.width, this.height);
+          this.drawGrid();
           var nDataSets = this.data.length;
-          var hitMarker = false;
-          CanvasDataPlot_updateTooltip_graph_loop: for (var i = 0; i < nDataSets; ++i) {
-              var d = this.data[i];
-              var iStart = this.displayIndexStart[i];
-              var iEnd = Math.min(d.length - 1, this.displayIndexEnd[i] + 1);
-              for (var j = iStart; j <= iEnd; ++j) {
-                  var dx = this.xScale(d[j][0]) - mx;
-                  var dy = this.yScale(d[j][1]) - my;
-                  if (dx * dx + dy * dy <= this.tooltipRadiusSquared) {
-                      hitMarker = true;
-                      this.showTooltip([this.xScale(d[j][0]), this.yScale(d[j][1])], this.dataColors[i], this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
-                      break CanvasDataPlot_updateTooltip_graph_loop;
-                  }
-              }
+          for (var i = 0; i < nDataSets; ++i) {
+              this.drawDataSet(i);
           }
-          if (!hitMarker) {
-              this.removeTooltip();
-          }
-      }
-      getTooltipStringX(dataPoint) {
-          return "x = " + dataPoint[0];
-      }
-      getTooltipStringY(dataPoint) {
-          return "y = " + dataPoint[1];
-      }
-      showTooltip(position, color$$1, xText, yText) {
-          if (this.tooltip) {
-              this.tooltip.remove();
-              this.tooltip = null;
-          }
-          this.tooltip = this.svgTranslateGroup.append("g")
-              .attr("class", "cvpTooltip")
-              .attr("transform", "translate(" + position[0] + ", " + (position[1] - this.markerRadius - 2) + ")");
-          var tooltipBG = this.tooltip.append("path")
-              .attr("class", "cvpTooltipBG")
-              .attr("d", "M0 0 L-10 -10 L-100 -10 L-100 -45 L100 -45 L100 -10 L10 -10 Z")
-              .attr("stroke", color$$1)
-              .attr("vector-effect", "non-scaling-stroke");
-          var xTextElem = this.tooltip.append("text")
-              .attr("x", 0)
-              .attr("y", -32)
-              .attr("text-anchor", "middle")
-              .text(xText);
-          var yTextElem = this.tooltip.append("text")
-              .attr("x", 0)
-              .attr("y", -15)
-              .attr("text-anchor", "middle")
-              .text(yText);
-          var nodeX = xTextElem.node(); //using assertion
-          var nodeY = yTextElem.node();
-          tooltipBG.attr("transform", "scale(" + (1.1 * Math.max(nodeX.getComputedTextLength(), nodeY.getComputedTextLength()) / 200) + ",1)");
-      }
-      removeTooltip() {
-          if (!this.tooltip) {
-              return;
-          }
-          this.tooltip.remove();
-          this.tooltip = null;
       }
       updateLegend() {
           if (this.disableLegend) {
@@ -7098,39 +6370,13 @@
           this.legend
               .attr("transform", "translate(" + (this.width - this.legendWidth - this.legendMargin) + ", " + this.legendMargin + ")");
       }
-      findLargestSmaller(d, ia, ib, v) {
-          if (this.xScale(d[ia][0]) >= v || ib - ia <= 1) {
-              return ia;
-          }
-          var imiddle = Math.floor(0.5 * (ia + ib));
-          return this.xScale(d[imiddle][0]) <= v ? this.findLargestSmaller(d, imiddle, ib, v) : this.findLargestSmaller(d, ia, imiddle, v);
-      }
-      updateDisplayIndices() {
-          var nDataSets = this.data.length;
-          for (var i = 0; i < nDataSets; ++i) {
-              var d = this.data[i];
-              if (d.length < 1) {
-                  continue;
-              }
-              var iStart = this.findLargestSmaller(d, 0, d.length - 1, 0);
-              var iEnd = this.findLargestSmaller(d, iStart, d.length - 1, this.width);
-              this.displayIndexStart[i] = iStart;
-              this.displayIndexEnd[i] = iEnd;
-          }
-      }
-      redrawCanvasAndAxes() {
-          /* this.xAxisGroup.call(this.xAxis);
-          this.yAxisGroup.call(this.yAxis); */
-          this.drawCanvas();
-      }
-      drawCanvas() {
-          this.canvas.clearRect(0, 0, this.width, this.height);
-          this.drawGrid();
-          var nDataSets = this.data.length;
-          for (var i = 0; i < nDataSets; ++i) {
-              this.drawDataSet(i);
-          }
-      }
+      // findLargestSmaller(d: Array<[Date, number]>, ia: number, ib: number, v:  number): number {
+      // 	if(this.xScale(d[ia][0]) >= v || ib-ia <= 1) {
+      // 		return ia;
+      // 	}
+      // 	var imiddle = Math.floor(0.5*(ia+ib));
+      // 	return this.xScale(d[imiddle][0]) <= v ? this.findLargestSmaller(d, imiddle, ib, v) : this.findLargestSmaller(d, ia, imiddle, v);
+      // }
       drawGrid() {
           this.canvas.lineWidth = 0.9;
           this.canvas.strokeStyle = this.gridColor;
@@ -7148,89 +6394,57 @@
           this.canvas.stroke();
           this.canvas.closePath();
       }
-      convertRange(value, r1, r2) {
-          return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
-      }
-      randomIntFromInterval(min$$1, max$$1) {
-          return Math.floor(Math.random() * (max$$1 - min$$1 + 1) + min$$1);
-      }
-      drawDataSet(dataIndex) {
-          var d = this.data[dataIndex];
-          if (d.length < 1) {
-              return;
-          }
-          var iStart = this.displayIndexStart[dataIndex];
-          var iEnd = this.displayIndexEnd[dataIndex];
-          var iLast = Math.min(d.length - 1, iEnd + 1);
-          this.canvas.strokeStyle = this.dataColors[dataIndex];
-          this.canvas.lineWidth = this.markerLineWidth;
-          for (var i = iStart; i <= iLast; ++i) {
-              this.canvas.beginPath();
-              this.canvas.arc(this.xScale(d[i][0]) * 40, this.yScale(d[i][1]) * 40, this.markerRadius, 0, 2 * Math.PI);
-              this.canvas.stroke();
-          }
-      }
-      resetZoomListenerAxes() {
-          /* this.zoomListener.translateTo(this.div,
-               (this.xAxisZoom ? this.xScale : d3.scaleLinear().domain([0,1]).range([0,1])),
-               (this.yAxisZoom ? this.yScale : d3.scaleLinear().domain([0,1]).range([0,1]))); */
-          //this.div.call(this.zoomListener.transform, d3.zoomIdentity);
-      }
-      updateZoomValues(scale, translate) {
-          this.zoomListener
-              .scale(scale)
-              .translate(translate);
-          this.updateDisplayIndices();
-          this.redrawCanvasAndAxes();
-      }
-      CanvasPlot_shallowObjectCopy(inObj) {
-          var original = inObj || {};
-          var keys$$1 = Object.getOwnPropertyNames(original);
-          var outObj = {};
-          keys$$1.forEach(k => {
-              outObj[k] = original[k];
-          });
-          return outObj;
-      }
-      CanvasPlot_appendToObject(obj, objToAppend) {
-          Object.keys(objToAppend).forEach(k => {
-              if (!obj.hasOwnProperty(k)) {
-                  obj[k] = objToAppend[k];
-              }
-              else {
-                  if (obj[k] !== null && typeof obj[k] === "object" && !Array.isArray(obj[k])) ;
-                  else if (Array.isArray(obj[k]) && Array.isArray(objToAppend[k])) {
-                      objToAppend[k].forEach((d) => {
-                          if (obj[k].indexOf(d) < 0) {
-                              obj[k].push(d);
-                          }
-                      });
-                  }
-              }
-          });
-      }
-  }
-
-  class CanvasTimeSeriesPlot extends CanvasDataPlot {
-      constructor(parentElement, canvasDimensions, config = {}) {
-          super(parentElement, canvasDimensions, config);
-          this.config = config || {};
-          this.informationDensity = [];
-          this.plotLineWidth = config.plotLineWidth || 1;
-          this.maxInformationDensity = config.maxInformationDensity || 2.0;
-          this.showMarkerDensity = config.showMarkerDensity || 0.14;
-          this.setupXScaleAndAxis();
-      }
-      addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
-          this.informationDensity.push(1);
-          super.addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData);
-      }
       removeDataSet(uniqueID) {
           var index = this.dataIDs.indexOf(uniqueID);
           if (index >= 0) {
               this.informationDensity.splice(index, 1);
           }
           this.removeDataSet.call(this, uniqueID);
+      }
+      calculateXDomain() {
+          var dates = [];
+          let nonEmptySets = [];
+          this.data.forEach(ds => {
+              if (ds && ds.length > 0) {
+                  nonEmptySets.push(ds);
+              }
+          });
+          nonEmptySets.forEach(dataPoint => {
+              dataPoint.forEach(point$$1 => {
+                  dates.push(point$$1[0]);
+              });
+          });
+          if (dates.length === 0) {
+              for (var i = 1; i < 100; i++) {
+                  dates.push(this.addDays(new Date(2015, 2, 23), i));
+              }
+          }
+          return extent([...new Set(dates)], function (d) { return d; });
+      }
+      calculateYDomain() {
+          let nonEmptySets = [];
+          this.data.forEach(ds => {
+              if (ds && ds.length > 0) {
+                  nonEmptySets.push(ds);
+              }
+          });
+          if (nonEmptySets.length < 1) {
+              return [0, 1];
+          }
+          var min$$1 = min(nonEmptySets[0], function (d) { return d[1]; });
+          var max$$1 = max(nonEmptySets[0], function (d) { return d[1]; });
+          for (var i = 1; i < nonEmptySets.length; ++i) {
+              min$$1 = Math.min(min$$1, min(nonEmptySets[i], function (d) { return d[1]; }));
+              max$$1 = Math.max(max$$1, max(nonEmptySets[i], function (d) { return d[1]; }));
+          }
+          if (max$$1 - min$$1 <= 0) {
+              min$$1 = max$$1 - 1;
+              max$$1 += 1;
+          }
+          return [min$$1, max$$1];
+      }
+      destroy() {
+          this.div.remove();
       }
       updateDisplayIndices() {
           var nDataSets = this.data.length;
@@ -7245,6 +6459,13 @@
               var scaleLength = Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
               this.informationDensity[i] = iLength / scaleLength;
           }
+      }
+      removeTooltip() {
+          if (!this.tooltip) {
+              return;
+          }
+          this.tooltip.remove();
+          this.tooltip = null;
       }
       updateTooltip() {
           var mouse$$1 = mouse(this.div.node());
@@ -7278,6 +6499,33 @@
               this.removeTooltip();
           }
       }
+      showTooltip(position, color$$1, xText, yText) {
+          if (this.tooltip) {
+              this.tooltip.remove();
+              this.tooltip = null;
+          }
+          this.tooltip = this.svgTranslateGroup.append("g")
+              .attr("class", "cvpTooltip")
+              .attr("transform", "translate(" + position[0] + ", " + (position[1] - this.markerRadius - 2) + ")");
+          var tooltipBG = this.tooltip.append("path")
+              .attr("class", "cvpTooltipBG")
+              .attr("d", "M0 0 L-10 -10 L-100 -10 L-100 -45 L100 -45 L100 -10 L10 -10 Z")
+              .attr("stroke", color$$1)
+              .attr("vector-effect", "non-scaling-stroke");
+          var xTextElem = this.tooltip.append("text")
+              .attr("x", 0)
+              .attr("y", -32)
+              .attr("text-anchor", "middle")
+              .text(xText);
+          var yTextElem = this.tooltip.append("text")
+              .attr("x", 0)
+              .attr("y", -15)
+              .attr("text-anchor", "middle")
+              .text(yText);
+          var nodeX = xTextElem.node(); //using assertion
+          var nodeY = yTextElem.node();
+          tooltipBG.attr("transform", "scale(" + (1.1 * Math.max(nodeX.getComputedTextLength(), nodeY.getComputedTextLength()) / 200) + ",1)");
+      }
       getTooltipStringX(dataPoint) {
           var zeroPad2 = function (n) {
               return n < 10 ? ("0" + n) : n.toString();
@@ -7291,6 +6539,9 @@
           var s = zeroPad2(date$$1.getUTCSeconds());
           return Y + "-" + M + "-" + D + " " + h + ":" + m + ":" + s;
       }
+      getTooltipStringY(dataPoint) {
+          return "y = " + dataPoint[1];
+      }
       addDays(date$$1, days$$1) {
           date$$1.setDate(date$$1.getDate() + days$$1);
           return date$$1;
@@ -7298,60 +6549,33 @@
       randomDate(start, end) {
           return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
       }
-      calculateXDomain() {
-          var dates = [];
-          let nonEmptySets = [];
-          this.data.forEach(ds => {
-              if (ds && ds.length > 0) {
-                  nonEmptySets.push(ds);
-              }
-          });
-          nonEmptySets.forEach(dataPoint => {
-              dataPoint.forEach(point$$1 => {
-                  dates.push(point$$1[0]);
-              });
-          });
-          if (dates.length === 0) {
-              for (var i = 1; i < 100; i++) {
-                  dates.push(this.randomDate(new Date(2015, 2, 23), new Date()));
-              }
-          }
-          dates = Array.from(new Set(dates));
-          var min$$1 = dates.reduce(function (a, b) { return a < b ? a : b; });
-          var max$$1 = dates.reduce(function (a, b) { return a > b ? a : b; });
-          max$$1 = max$$1 <= min$$1 ? this.addDays(max$$1, 5) : max$$1;
-          return [min$$1, max$$1];
-      }
       setupXScaleAndAxis() {
           this.xScale = time()
               .domain(this.calculateXDomain())
-              .range([0, this.width])
+              .rangeRound([0, this.width])
               .nice()
               .clamp(true);
           var formatMilliSecond = timeFormat(".%L"), formatSecond = timeFormat(":%S"), formatHour = timeFormat("%I:%p"), formatWeek = timeFormat("%b %d"), formatMonth = timeFormat("%B"), formatYear = timeFormat("%Y");
-          let multiFormat = (date$$1) => {
-              return (second(date$$1) < date$$1 ? formatMilliSecond
-                  : minute(date$$1) < date$$1 ? formatSecond
-                      : day(date$$1) < date$$1 ? formatHour
-                          : sunday(date$$1) < date$$1 ? formatWeek
-                              : year(date$$1) < date$$1 ? formatMonth
-                                  : formatYear)(date$$1);
-          };
           this.xAxis = axisBottom(this.xScale)
-              .tickFormat(multiFormat)
-              .ticks(Math.round(this.xTicksPerPixel * this.width));
+              // .tickFormat(multiFormat)
+              // .tickFormat(d3.timeFormat(xFormat))
+              .ticks(day.every(4));
+      }
+      setupYScaleAndAxis() {
+          this.yScale = linear$2()
+              .domain(this.calculateYDomain())
+              .rangeRound(this.invertYAxis ? [0, this.height] : [this.height, 0])
+              .nice()
+              .clamp(true);
+          this.yAxis = axisLeft(this.yScale)
+              .ticks(Math.round(this.yTicksPerPixel * this.height));
       }
       drawDataSet(dataIndex) {
           var d = this.data[dataIndex];
           if (d.length < 1) {
               return;
           }
-          // var firstElem = this.calculateXDomain()[0]
-          // var last = this.calculateXDomain()[1]
-          // console.log(firstElem)
-          // console.log(this.xScale(firstElem))
-          // console.log(this.xScale(last))
-          // console.log("last: "+last)
+          // console.log(this.data)
           var iStart = this.displayIndexStart[dataIndex];
           var iEnd = this.displayIndexEnd[dataIndex];
           var informationDensity = this.informationDensity[dataIndex];
@@ -7359,12 +6583,13 @@
           if (informationDensity > this.maxInformationDensity) {
               drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
           }
-          //Make iStart divisivble by drawEvery to prevent flickering graphs while panning
           iStart = Math.max(0, iStart - iStart % drawEvery);
           this.canvas.beginPath();
-          this.canvas.moveTo(this.xScale(d[iStart][0]), this.yScale(d[iStart][1]));
-          // console.log("istart "+d[iStart][0])
-          // console.log(this.xScale(d[iStart][0])) // bad reference ...xscale is missbehaving....
+          this.canvas.moveTo(this.xScale(d[iStart][0]) / 10, this.yScale(d[iStart][1]));
+          // var parseTime = d3.timeParse("%d/%m/%Y");
+          // console.log(this.xScale(parseTime("30/4/2015")))
+          // console.log(this.xScale(new Date(2015,4,30)))
+          // console.log(this.width)
           for (var i = iStart; i <= iEnd; i = i + drawEvery) {
               this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
           }
@@ -7373,7 +6598,7 @@
           this.canvas.lineWidth = this.plotLineWidth;
           this.canvas.strokeStyle = this.dataColors[dataIndex];
           this.canvas.stroke();
-          if (informationDensity <= this.showMarkerDensity) {
+          if (informationDensity >= this.showMarkerDensity) {
               this.canvas.lineWidth = this.markerLineWidth;
               for (var i = iStart; i <= iLast; ++i) {
                   this.canvas.beginPath();
@@ -7384,345 +6609,28 @@
       }
   }
 
-  class CanvasVectorSeriesPlot extends CanvasTimeSeriesPlot {
-      constructor(parentElement, canvasDimensions, config = {}) {
-          super(parentElement, canvasDimensions, config);
-          this.vectorScale = config.vectorScale || 2.0e5;
-          this.scaleUnits = config.scaleUnits || "units";
-          this.scaleLength = config.scaleLength || 75;
-          this.scaleTextElem = null;
-          var configCopy = this.CanvasPlot_shallowObjectCopy(config);
-          //configCopy["showTooltips"] = false;
-          if (!("invertYAxis" in configCopy)) {
-              configCopy["invertYAxis"] = true;
-          }
-      }
-      // the coordinates access is different to the original function in js! 2 -> 1 and 3 -> 1
-      getTooltipStringY(dataPoint) {
-          var roundConst = 100;
-          var dir = Math.round(roundConst * 180 / Math.PI * (dataPoint[1] % (2 * Math.PI))) / roundConst;
-          var mag = Math.round(roundConst * dataPoint[1]) / roundConst;
-          return "y = " + dataPoint[1] + "; dir = " + dir + "; mag = " + mag;
-      }
-      getMagnitudeScale() {
-          var xDomain = this.getXDomain();
-          return this.vectorScale * this.width / (xDomain[1] - xDomain[0]);
-      }
-      drawCanvas() {
-          this.updateScaleText();
-          CanvasTimeSeriesPlot.prototype.drawCanvas.call(this);
-      }
-      drawDataSet(dataIndex) {
-          var d = this.data[dataIndex];
-          if (d.length < 1) {
-              return;
-          }
-          var iStart = this.displayIndexStart[dataIndex];
-          var iEnd = this.displayIndexEnd[dataIndex];
-          var informationDensity = this.informationDensity[dataIndex];
-          var drawEvery = 1;
-          if (informationDensity > this.maxInformationDensity) {
-              drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
-          }
-          // Make iStart divisivble by drawEvery to prevent flickering graphs while panning
-          iStart = Math.max(0, iStart - drawEvery - iStart % drawEvery);
-          iEnd = Math.min(d.length - 1, iEnd + drawEvery);
-          this.canvas.lineWidth = this.plotLineWidth;
-          this.canvas.strokeStyle = this.dataColors[dataIndex];
-          var magScale = this.getMagnitudeScale();
-          var tipSize = 10 * magScale;
-          for (var i = iStart; i <= iEnd; i = i + drawEvery) {
-              var startX = this.xScale(d[i][0]);
-              var startY = this.yScale(d[i][1]);
-              var dir = -1.0 * d[i][1] + 0.5 * Math.PI; // second index of d change to 1: get the data instead of the date 
-              var mag = magScale * d[i][1];
-              var cosDir = Math.cos(dir);
-              var sinDir = Math.sin(dir);
-              var endX = startX + mag * cosDir;
-              var endY = startY - mag * sinDir;
-              //var tipAngle = 0.1*Math.PI;
-              this.canvas.beginPath();
-              this.canvas.moveTo(startX, startY);
-              this.canvas.lineTo(endX, endY);
-              this.canvas.stroke();
-              this.canvas.beginPath();
-              this.canvas.moveTo(startX + (mag - tipSize) * cosDir - 0.5 * tipSize * sinDir, startY - ((mag - tipSize) * sinDir + 0.5 * tipSize * cosDir));
-              this.canvas.lineTo(endX, endY);
-              this.canvas.lineTo(startX + (mag - tipSize) * cosDir + 0.5 * tipSize * sinDir, startY - ((mag - tipSize) * sinDir - 0.5 * tipSize * cosDir));
-              this.canvas.stroke();
-          }
-      }
-      updateScaleText() {
-          if (this.disableLegend || !this.scaleTextElem) {
-              return;
-          }
-          var newLabel = (this.scaleLength / this.getMagnitudeScale()).toFixed(1) + this.scaleUnits;
-          this.scaleTextElem.text(newLabel);
-          var newLength = this.scaleTextElem.node().getComputedTextLength() + this.scaleLength + 3 * this.legendXPadding;
-          var lengthDiff = this.legendWidth - newLength;
-          if (lengthDiff < 0) {
-              this.legendWidth -= lengthDiff;
-              this.legendBG.attr("width", this.legendWidth);
-              this.legend
-                  .attr("transform", "translate(" + (this.width - this.legendWidth -
-                  this.legendMargin) + ", " + this.legendMargin + ")");
-          }
-      }
-      updateLegend() {
-          if (this.disableLegend) {
-              return;
-          }
-          CanvasDataPlot.prototype.updateLegend.call(this);
-          if (!this.legend) {
-              return;
-          }
-          var oldHeight = parseInt(this.legendBG.attr("height"));
-          var newHeight = oldHeight + this.legendYPadding + this.legendLineHeight;
-          this.legendBG.attr("height", newHeight);
-          this.legend.append("rect")
-              .attr("x", this.legendXPadding)
-              .attr("y", newHeight - Math.floor((this.legendYPadding + 0.5 * this.legendLineHeight)) + 1)
-              .attr("width", this.scaleLength)
-              .attr("height", 2)
-              .attr("fill", "black")
-              .attr("stroke", "none");
-          this.scaleTextElem = this.legend.append("text")
-              .attr("x", 2 * this.legendXPadding + this.scaleLength)
-              .attr("y", newHeight - this.legendYPadding);
-          this.updateScaleText();
-      }
-  }
-
-  class CanvasDataPlotGroup {
-      constructor(parentElement, plotDimensions, multiplePlots, syncPlots, defaultConfig = {}) {
-          this.defaultConfig = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(defaultConfig);
-          this.container = parentElement;
-          CanvasDataPlot.prototype.width = plotDimensions[0];
-          CanvasDataPlot.prototype.height = plotDimensions[1];
-          this.plots = [];
-          this.firstPlotType = "";
-          this.multiplePlots = multiplePlots;
-          this.syncPlots = syncPlots;
-          this.syncTranslateX = true;
-          this.syncTranslateY = false;
-          this.lastZoomedPlot = null;
-          this.zoomXAxis = true;
-          this.zoomYAxis = true;
-          this.defaultConfig["updateViewCallback"] = (this.multiplePlots ? (this.setViews).bind(this) : null);
-      }
-      addDataSet(plotType, uniqueID, displayName, dataSet, color, plotConfig) {
-          if (this.multiplePlots || this.plots.length < 1) {
-              var config = null;
-              if (plotConfig) {
-                  config = CanvasDataPlot.prototype.CanvasPlot_shallowObjectCopy(plotConfig);
-                  CanvasDataPlot.prototype.CanvasPlot_appendToObject(config, this.defaultConfig);
-              }
-              else {
-                  config = this.defaultConfig;
-              }
-              if (plotConfig && this.multiplePlots) {
-                  config["updateViewCallback"] = (this.setViews).bind(this);
-              }
-              var p = this.createPlot(plotType, config);
-              p.addDataSet(uniqueID, displayName, dataSet, color, false);
-              p.setZoomXAxis(this.zoomXAxis);
-              p.setZoomYAxis(this.zoomYAxis);
-              this.plots.push(p);
-              this.firstPlotType = plotType;
-              this.fitDataInViews();
-          }
-          else if (plotType === this.firstPlotType) {
-              this.plots[0].addDataSet(uniqueID, displayName, dataSet, color, true);
-          }
-      }
-      removeDataSet(uniqueID) {
-          if (this.multiplePlots) {
-              var nPlots = this.plots.length;
-              for (var i = 0; i < nPlots; ++i) {
-                  if (this.plots[i].getDataID(0) === uniqueID) {
-                      if (this.lastZoomedPlot === this.plots[i]) {
-                          this.lastZoomedPlot = null;
-                      }
-                      this.plots[i].destroy();
-                      this.plots.splice(i, 1);
-                      break;
-                  }
-              }
-          }
-          else if (this.plots.length > 0) {
-              this.plots[0].removeDataSet(uniqueID);
-          }
-      }
-      setSyncViews(sync, translateX, translateY) {
-          this.syncPlots = sync;
-          this.syncTranslateX = translateX;
-          this.syncTranslateY = translateY;
-          if (sync) {
-              if (this.lastZoomedPlot) {
-                  var xDomain = this.lastZoomedPlot.getXDomain();
-                  var yDomain = this.lastZoomedPlot.getYDomain();
-                  this.plots.forEach((function (p) {
-                      if (p != this.lastZoomedPlot) {
-                          p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
-                      }
-                  }).bind(this));
-              }
-              else {
-                  this.fitDataInViews();
-              }
-          }
-      }
-      setZoomXAxis(zoomX) {
-          this.zoomXAxis = zoomX;
-          this.plots.forEach(function (p) {
-              p.setZoomXAxis(zoomX);
-          });
-      }
-      setZoomYAxis(zoomY) {
-          this.zoomYAxis = zoomY;
-          this.plots.forEach(function (p) {
-              p.setZoomYAxis(zoomY);
-          });
-      }
-      fitDataInViews() {
-          if (this.plots.length < 1) {
-              return;
-          }
-          var xDomain = this.plots[0].calculateXDomain();
-          var yDomain = this.plots[0].calculateYDomain();
-          for (var i = 1; i < this.plots.length; ++i) {
-              var xDomainCandidate = this.plots[i].calculateXDomain();
-              var yDomainCandidate = this.plots[i].calculateYDomain();
-              if (xDomainCandidate[0] < xDomain[0]) {
-                  xDomain[0] = xDomainCandidate[0];
-              }
-              if (xDomainCandidate[1] > xDomain[1]) {
-                  xDomain[1] = xDomainCandidate[1];
-              }
-              if (yDomainCandidate[0] < yDomain[0]) {
-                  yDomain[0] = yDomainCandidate[0];
-              }
-              if (yDomainCandidate[1] > yDomain[1]) {
-                  yDomain[1] = yDomainCandidate[1];
-              }
-          }
-          this.plots.forEach(function (p) {
-              p.updateDomains(xDomain, yDomain, true);
-          });
-      }
-      resizePlots(dimensions) {
-          CanvasDataPlot.prototype.width = dimensions[0];
-          CanvasDataPlot.prototype.height = dimensions[1];
-          this.plots.forEach(function (p) {
-              p.resize(dimensions);
-          });
-      }
-      destroy() {
-          this.plots.forEach(function (p) {
-              p.destroy();
-          });
-          this.lastZoomedPlot = null;
-          this.plots = [];
-      }
-      createPlot(plotType, plotConfig) {
-          if (plotType === "CanvasTimeSeriesPlot") {
-              return new CanvasTimeSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
-          }
-          if (plotType === "CanvasVectorSeriesPlot") {
-              return new CanvasVectorSeriesPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
-          }
-          return new CanvasDataPlot(this.container, [CanvasDataPlot.prototype.width, CanvasDataPlot.prototype.height], plotConfig);
-      }
-      setViews(except, xDomain, yDomain) {
-          this.lastZoomedPlot = except;
-          if (!this.syncPlots) {
-              return;
-          }
-          this.plots.forEach((function (p) {
-              if (p != except) {
-                  p.updateDomains(this.syncTranslateX ? xDomain : p.getXDomain(), this.syncTranslateY ? yDomain : p.getYDomain(), false);
-              }
-          }).bind(this));
-      }
-  }
-
   function getDemoPlotSize() {
       return [window.innerWidth - 100, Math.round(0.45 * (window.innerWidth - 100))];
   }
-  function randomDate(start, end) {
-      return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  function addDays(date$$1, days$$1) {
+      date$$1.setDate(date$$1.getDate() + days$$1);
+      return date$$1;
   }
   $(document).ready(function () {
-      var data1 = [[1, 5], [0.5, 6], [5, 25], [6, 1], [10, 9],
-          [20, 55], [10, 32], [15, 25], [16, 19], [10, 89],
-          [27, 56], [18, 5], [15, 6], [72, 41]];
-      var plot1 = new CanvasDataPlot(select("#maincontainer"), [1000, 900], {
-          xAxisLabel: "IQ",
-          yAxisLabel: "Test Score",
-          markerLineWidth: 3,
-          markerRadius: 5
-      });
-      plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
-      plot1.addDataPoint("ds1", [15, 0]); // Will not be added! (x values have to be in ascending order)
-      plot1.addDataPoint("ds1", [20, 10]); // Will be added.
-      plot1.addDataPoint("ds1", [21, 0]);
-      plot1.updateDomains([-2, 22], [-60, 15], true);
       var ts1 = [];
       var ts2 = [];
-      // var now = new Date();
-      // for(var i=0; i<100; ++i) {
-      //     var time = new Date(now);
-      //     time.setHours(i);
-      //     ts1.push([time, Math.random()]);
-      //     ts2.push([time, Math.random()]);
-      // }
       for (var i = 0; i < 100; ++i) {
-          ts1.push([randomDate(new Date(2010, 1, 1), new Date()), Math.random()]);
-          ts2.push([randomDate(new Date(2015, 12, 11), new Date()), Math.random()]);
+          ts1.push([addDays(new Date(2010, 1, 1), i), Math.random()]);
+          ts2.push([addDays(new Date(2015, 12, 11), i), Math.random()]);
       }
       var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
           yAxisLabel: "Voltage [V]"
       });
       plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
       plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
-      plot2.setZoomYAxis(false);
       $(window).resize(function () {
           plot2.resize(getDemoPlotSize());
       });
-      // var time = new Date(now);
-      // time.setHours(101);
-      // var newDataPoint:[Date, number] = [time, 1.5];
-      // plot2.addDataPoint("ds1", newDataPoint, true, true);
-      // newDataPoint[1] = 3.0; // Has no effect since we told addDataPoint() to copy the new value.
-      var tsPlotGroup = new CanvasDataPlotGroup(select("#maincontainer"), getDemoPlotSize(), true, true, {});
-      tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds1", "Signal 1", ts1, "orange", {
-          yAxisLabel: "Voltage [V]"
-      });
-      tsPlotGroup.addDataSet("CanvasTimeSeriesPlot", "ds2", "Signal 2", ts2, "steelblue", {
-          yAxisLabel: "Voltage [V]",
-          plotLineWidth: 1.5
-      });
-      tsPlotGroup.addDataSet("CanvasDataPlot", "ds3", "Signal 3", ts2, "blue", {
-          yAxisLabel: "Voltage [V]"
-      });
-      tsPlotGroup.removeDataSet("ds3");
-      tsPlotGroup.setSyncViews(true, true, false);
-      var plot3 = new CanvasVectorSeriesPlot(select("#maincontainer"), [750, 500], {
-          yAxisLabel: "Depth [m]",
-          maxInformationDensity: 0.3,
-          plotLineWidth: 1.5,
-          vectorScale: 7.0e5,
-          scaleUnits: "mm/s"
-      });
-      var tsVector1 = [];
-      for (var i = 0; i < 1000; ++i) {
-          var time$$1 = new Date(new Date());
-          time$$1.setHours(i);
-          // tsVector1.push([time, 50, 0.01*i*Math.PI, 100]);
-          tsVector1.push([time$$1, 0.01 * i * Math.PI]);
-      }
-      plot3.addDataSet("ts1", "Velocity", tsVector1, "steelblue", true);
-      plot3.setZoomYAxis(false);
   });
 
 })));
