@@ -19,7 +19,7 @@ $(document).ready(function () {
         markerLineWidth: 3,
         markerRadius: 5
     });
-    plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
+    plot1.addDataSet("ds1", "Test 1", data1, "orange", false, false);
     plot1.addDataPoint("ds1", [15, 0]); // Will not be added! (x values have to be in ascending order)
     plot1.addDataPoint("ds1", [20, 10]); // Will be added.
     plot1.addDataPoint("ds1", [21, 0]);
@@ -40,8 +40,8 @@ $(document).ready(function () {
     var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), getDemoPlotSize(), {
         yAxisLabel: "Voltage [V]"
     });
-    plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
-    plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
+    plot2.addDataSet("ds1", "Signal 1", ts1, "orange", false, false);
+    plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", false, false);
     plot2.setZoomYAxis(false);
     $(window).resize(function () {
         plot2.resize(getDemoPlotSize());

@@ -3386,7 +3386,7 @@
     return columns;
   }
 
-  function dsvFormat(delimiter) {
+  function dsv(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3479,9 +3479,19 @@
     };
   }
 
-  var csv = dsvFormat(",");
+  var csv = dsv(",");
 
-  var tsv = dsvFormat("\t");
+  var csvParse = csv.parse;
+  var csvParseRows = csv.parseRows;
+  var csvFormat = csv.format;
+  var csvFormatRows = csv.formatRows;
+
+  var tsv = dsv("\t");
+
+  var tsvParse = tsv.parse;
+  var tsvParseRows = tsv.parseRows;
+  var tsvFormat = tsv.format;
+  var tsvFormatRows = tsv.formatRows;
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -7676,7 +7686,7 @@
           markerLineWidth: 3,
           markerRadius: 5
       });
-      plot1.addDataSet("ds1", "Test 1", data1, "orange", true, false);
+      plot1.addDataSet("ds1", "Test 1", data1, "orange", false, false);
       plot1.addDataPoint("ds1", [15, 0]); // Will not be added! (x values have to be in ascending order)
       plot1.addDataPoint("ds1", [20, 10]); // Will be added.
       plot1.addDataPoint("ds1", [21, 0]);
@@ -7697,8 +7707,8 @@
       var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
           yAxisLabel: "Voltage [V]"
       });
-      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
-      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
+      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", false, false);
+      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", false, false);
       plot2.setZoomYAxis(false);
       $(window).resize(function () {
           plot2.resize(getDemoPlotSize());
