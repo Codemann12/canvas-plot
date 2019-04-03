@@ -13,17 +13,17 @@ function randomDate(start, end) {
 $(document).ready(function () {
     var ts1 = [];
     var ts2 = [];
-    for (var i = 0; i < 100; ++i) {
-        ts1.push([addDays(new Date(2010, 1, 1), i), Math.random()]);
-        ts2.push([addDays(new Date(2015, 12, 11), i), Math.random()]);
+    for (var i = 0; i < 365; ++i) {
+        ts1.push({ xDate: addDays(new Date(2017, 0, 1), i * 5), yNum: Math.random() });
+        ts2.push({ xDate: addDays(new Date(2017, 0, 1), i * 9), yNum: Math.random() });
     }
     var plot2 = new CanvasTimeSeriesPlot(d3.select("#maincontainer"), getDemoPlotSize(), {
         yAxisLabel: "Voltage [V]"
     });
-    plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
-    plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
-    $(window).resize(function () {
-        plot2.resize(getDemoPlotSize());
+    plot2.addDataSet("ds1", "Signal 1", ts1, "orange", false, false);
+    plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", false, false);
+    $(window).resize(() => {
+        // plot2.resize(getDemoPlotSize());
     });
 });
 //# sourceMappingURL=demo.js.map

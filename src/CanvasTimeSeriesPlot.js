@@ -40,8 +40,6 @@ export class CanvasTimeSeriesPlot {
         this.totalHeight = Math.max(this.minCanvasHeight, canvasDimensions[1]);
         this.width = this.totalWidth - this.margin.left - this.margin.right;
         this.height = this.totalHeight - this.margin.top - this.margin.bottom;
-        // this.zoomListener = d3.zoom().on("zoom", this.zoomFunction);
-        //Append to the selected HTMLElement a div with the listed properties
         this.div = this.parent.append("div")
             .attr("class", "cvpChart")
             .style("width", this.totalWidth + "px")
@@ -95,9 +93,15 @@ export class CanvasTimeSeriesPlot {
         }
         this.xAxisZoom = true;
         this.yAxisZoom = true;
-        // this.drawCanvas();
-        // this.resetZoomListenerAxes();   
+        // this.zoom = d3.zoom()
+        // .on("zoom", this.zoomFunction());
     }
+    // zoomFunction(): ValueFn<Element, {}, void>{
+    // 	var new_xScale = d3.event.transform.rescaleX(this.xScale)
+    // 	var new_yScale = d3.event.transform.rescaleY(this.yScale)
+    // 	console.log(d3.event.transform)
+    // 	return new_xScale;
+    // }
     addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
         this.informationDensity.push(1);
         this.dataIDs.push(uniqueID);
@@ -105,18 +109,23 @@ export class CanvasTimeSeriesPlot {
         this.dataColors.push(colorString);
         this.displayIndexStart.push(0);
         this.displayIndexEnd.push(0);
-        //  dataSet = dataSet || []; 
+        dataSet = dataSet || [];
+        this.data = [];
         if (copyData) {
             var dataIndex = this.data.length;
-            this.data.push(dataSet);
+            dataSet.forEach(elem => {
+                this.data.push(elem);
+            });
             var dataSetLength = dataSet.length;
             for (var i = 0; i < dataSetLength; ++i) {
                 var sliceData = jQuery.extend(true, {}, dataSet[i]); //deep copy --> arr.slice(0)
-                this.data[dataIndex].push(sliceData);
+                this.data[dataIndex] = sliceData;
             }
         }
         else {
-            this.data.push(dataSet);
+            dataSet.forEach(elem => {
+                this.data.push(elem);
+            });
         }
         this.updateLegend();
         if (updateDomains) {
@@ -161,8 +170,8 @@ export class CanvasTimeSeriesPlot {
                 .attr("transform", "translate(" + (this.width - this.legendWidth - this.legendMargin) + ", " + this.legendMargin + ")");
         }
         this.updateDisplayIndices();
-        // this.resetZoomListenerAxes();
         this.drawCanvas();
+        console.log("resize");
     }
     updateDomains(xDomain, yDomain, makeItNice) {
         this.xScale = d3.scaleTime().domain(xDomain);
@@ -172,16 +181,64 @@ export class CanvasTimeSeriesPlot {
             this.yScale = d3.scaleLinear().nice();
         }
         this.updateDisplayIndices();
-        // this.resetZoomListenerAxes();
         this.drawCanvas();
     }
     drawCanvas() {
         this.canvas.clearRect(0, 0, this.width, this.height);
         this.drawGrid();
         var nDataSets = this.data.length;
-        for (var i = 0; i < nDataSets; ++i) {
-            this.drawDataSet(i);
-        }
+        // for(var i=0; i<nDataSets; ++i) {
+        // 	this.drawDataSet(i);
+        // 	}
+        this.drawDataSet();
+    }
+    drawDataSet() {
+        var line = d3.line()
+            .x(d => { return this.xScale(d.xDate); })
+            .y(d => { return this.yScale(d.yNum); })
+            .curve(d3.curveMonotoneX);
+        var color = this.dataColors.length > 1 ? this.dataColors[1] : this.dataColors[0];
+        var div = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+        this.svgTranslateGroup.append("path")
+            .datum(this.data)
+            .attr("class", "line")
+            .attr("d", line)
+            .style("fill", "none")
+            .style("stroke", color)
+            .style("stroke-width", 2);
+        var formatTime = d3.timeFormat("%d-%b-%y");
+        this.svgTranslateGroup.selectAll("circle")
+            .data(this.data)
+            .enter().append("circle")
+            .attr("class", "circle")
+            .attr("cx", d => { return this.xScale(d["xDate"]); })
+            .attr("cy", d => { return this.yScale(d["yNum"]); })
+            .attr("r", 4)
+            .style("fill", color);
+        this.svgTranslateGroup.selectAll(".dot")
+            .data(this.data)
+            .enter().append("circle")
+            .attr("class", "circle")
+            .attr("cx", d => { return this.xScale(d["xDate"]); })
+            .attr("cy", d => { return this.yScale(d["yNum"]); })
+            .attr("r", 4)
+            .style("fill", color)
+            .on("mouseover", d => {
+            div.transition()
+                .duration(200)
+                .style("opacity", .9)
+                .style("background-color", color);
+            div.html("xCoord: " + formatTime(d["xDate"]) + "<br/>" + "yCoord: " + d["yNum"])
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+            .on("mouseout", () => {
+            div.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
     }
     updateLegend() {
         if (this.disableLegend) {
@@ -224,24 +281,17 @@ export class CanvasTimeSeriesPlot {
         this.legend
             .attr("transform", "translate(" + (this.width - this.legendWidth - this.legendMargin) + ", " + this.legendMargin + ")");
     }
-    // findLargestSmaller(d: Array<[Date, number]>, ia: number, ib: number, v:  number): number {
-    // 	if(this.xScale(d[ia][0]) >= v || ib-ia <= 1) {
-    // 		return ia;
-    // 	}
-    // 	var imiddle = Math.floor(0.5*(ia+ib));
-    // 	return this.xScale(d[imiddle][0]) <= v ? this.findLargestSmaller(d, imiddle, ib, v) : this.findLargestSmaller(d, ia, imiddle, v);
-    // }
     drawGrid() {
         this.canvas.lineWidth = 0.9;
         this.canvas.strokeStyle = this.gridColor;
         this.canvas.beginPath();
         for (var i = 1; i <= Math.floor(this.width); i++) {
-            var x = (i * 50);
+            var x = (i * 10);
             this.canvas.moveTo(0, x);
             this.canvas.lineTo(this.width, x);
         }
         for (var j = 1; j <= Math.floor(this.height); j++) {
-            var y = (j * 100);
+            var y = (j * 10);
             this.canvas.moveTo(y, 0);
             this.canvas.lineTo(y, this.height);
         }
@@ -256,63 +306,32 @@ export class CanvasTimeSeriesPlot {
         this.removeDataSet.call(this, uniqueID);
     }
     calculateXDomain() {
-        var dates = [];
-        let nonEmptySets = [];
-        this.data.forEach(ds => {
-            if (ds && ds.length > 0) {
-                nonEmptySets.push(ds);
-            }
-        });
-        nonEmptySets.forEach(dataPoint => {
-            dataPoint.forEach(point => {
-                dates.push(point[0]);
-            });
-        });
-        if (dates.length === 0) {
-            for (var i = 1; i < 100; i++) {
-                dates.push(this.addDays(new Date(2015, 2, 23), i));
+        if (this.data.length <= 1) {
+            for (var i = 0; i < 365; ++i) {
+                this.data.push({ xDate: this.addDays(new Date(2017, 0, 1), i), yNum: Math.random() });
             }
         }
-        return d3.extent([...new Set(dates)], function (d) { return d; });
+        return d3.extent(this.data, function (d) { return d.xDate; });
     }
     calculateYDomain() {
-        let nonEmptySets = [];
-        this.data.forEach(ds => {
-            if (ds && ds.length > 0) {
-                nonEmptySets.push(ds);
-            }
-        });
-        if (nonEmptySets.length < 1) {
-            return [0, 1];
-        }
-        var min = d3.min(nonEmptySets[0], function (d) { return d[1]; });
-        var max = d3.max(nonEmptySets[0], function (d) { return d[1]; });
-        for (var i = 1; i < nonEmptySets.length; ++i) {
-            min = Math.min(min, d3.min(nonEmptySets[i], function (d) { return d[1]; }));
-            max = Math.max(max, d3.max(nonEmptySets[i], function (d) { return d[1]; }));
-        }
-        if (max - min <= 0) {
-            min = max - 1;
-            max += 1;
-        }
-        return [min, max];
+        return d3.extent(this.data, function (d) { return d.yNum; });
     }
     destroy() {
         this.div.remove();
     }
     updateDisplayIndices() {
-        var nDataSets = this.data.length;
-        for (var i = 0; i < nDataSets; ++i) {
-            var d = this.data[i];
-            if (d.length < 1) {
-                continue;
-            }
-            var iStart = this.displayIndexStart[i];
-            var iEnd = this.displayIndexEnd[i];
-            var iLength = iEnd - iStart + 1;
-            var scaleLength = Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
-            this.informationDensity[i] = iLength / scaleLength;
-        }
+        // var nDataSets = this.data.length;
+        // for(var i=0; i<nDataSets; ++i) {
+        //     var d = this.data[i];
+        //     if(d.length < 1) {
+        //         continue;
+        //     }
+        //     var iStart = this.displayIndexStart[i];
+        //     var iEnd = this.displayIndexEnd[i];
+        //     var iLength = iEnd - iStart + 1;
+        //     var scaleLength =  Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
+        //     this.informationDensity[i] = iLength/scaleLength;
+        // }
     }
     removeTooltip() {
         if (!this.tooltip) {
@@ -322,36 +341,38 @@ export class CanvasTimeSeriesPlot {
         this.tooltip = null;
     }
     updateTooltip() {
-        var mouse = d3.mouse(this.div.node());
-        var mx = mouse[0] - this.margin.left;
-        var my = mouse[1] - this.margin.top;
-        if (mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
-            this.removeTooltip();
-            return;
-        }
-        var nDataSets = this.data.length;
-        var hitMarker = false;
-        TimeSeriesPlot_updateTooltip_graph_loop: for (var i = 0; i < nDataSets; ++i) {
-            if (this.informationDensity[i] > this.showMarkerDensity) {
-                continue;
-            }
-            var d = this.data[i];
-            var iStart = this.displayIndexStart[i];
-            var iEnd = Math.min(d.length - 1, this.displayIndexEnd[i] + 1);
-            for (var j = iStart; j <= iEnd; ++j) {
-                var dx = this.xScale(d[j][0]) - mx;
-                var dy = this.yScale(d[j][1]) - my;
-                if (dx * dx + dy * dy <= this.tooltipRadiusSquared) {
-                    hitMarker = true;
-                    this.showTooltip([this.xScale(d[j][0]),
-                        this.yScale(d[j][1])], this.dataColors[i], this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
-                    break TimeSeriesPlot_updateTooltip_graph_loop;
-                }
-            }
-        }
-        if (!hitMarker) {
-            this.removeTooltip();
-        }
+        // var mouse = d3.mouse(this.div.node());
+        // var mx = mouse[0] - this.margin.left;
+        // var my = mouse[1] - this.margin.top;
+        // if(mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
+        //     this.removeTooltip();
+        //     return;
+        // }
+        // var nDataSets = this.data.length;
+        // var hitMarker = false;
+        // TimeSeriesPlot_updateTooltip_graph_loop:
+        // for(var i=0; i<nDataSets; ++i) {
+        //     if(this.informationDensity[i] > this.showMarkerDensity) {
+        //         continue;
+        //     }
+        //     var d = this.data[i];
+        //     var iStart = this.displayIndexStart[i];
+        //     var iEnd = Math.min(d.length-1, this.displayIndexEnd[i]+1);
+        //     for(var j=iStart; j<=iEnd; ++j) {
+        //         var dx = this.xScale(d[j][0]) - mx;
+        //         var dy = this.yScale(d[j][1]) - my;
+        //         if(dx*dx + dy*dy <= this.tooltipRadiusSquared) {
+        //             hitMarker = true;
+        //             this.showTooltip([this.xScale(d[j][0]), 
+        //             this.yScale(d[j][1])], this.dataColors[i],
+        //             this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
+        //             break TimeSeriesPlot_updateTooltip_graph_loop;
+        //         }
+        //     }
+        // }
+        // if(!hitMarker){
+        //     this.removeTooltip();
+        // }
     }
     showTooltip(position, color, xText, yText) {
         if (this.tooltip) {
@@ -403,6 +424,9 @@ export class CanvasTimeSeriesPlot {
     randomDate(start, end) {
         return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
     }
+    getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
     setupXScaleAndAxis() {
         this.xScale = d3.scaleTime()
             .domain(this.calculateXDomain())
@@ -421,8 +445,8 @@ export class CanvasTimeSeriesPlot {
         var xFormat = "%d-%b-%y";
         this.xAxis = d3.axisBottom(this.xScale)
             // .tickFormat(multiFormat)
-            // .tickFormat(d3.timeFormat(xFormat))
-            .ticks(d3.timeDay.every(4));
+            .tickFormat(d3.timeFormat(xFormat));
+        // .ticks(d3.timeDay.every(4))
     }
     setupYScaleAndAxis() {
         this.yScale = d3.scaleLinear()
@@ -432,43 +456,6 @@ export class CanvasTimeSeriesPlot {
             .clamp(true);
         this.yAxis = d3.axisLeft(this.yScale)
             .ticks(Math.round(this.yTicksPerPixel * this.height));
-    }
-    drawDataSet(dataIndex) {
-        var d = this.data[dataIndex];
-        if (d.length < 1) {
-            return;
-        }
-        // console.log(this.data)
-        var iStart = this.displayIndexStart[dataIndex];
-        var iEnd = this.displayIndexEnd[dataIndex];
-        var informationDensity = this.informationDensity[dataIndex];
-        var drawEvery = 1;
-        if (informationDensity > this.maxInformationDensity) {
-            drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
-        }
-        iStart = Math.max(0, iStart - iStart % drawEvery);
-        this.canvas.beginPath();
-        this.canvas.moveTo(this.xScale(d[iStart][0]) / 10, this.yScale(d[iStart][1]));
-        // var parseTime = d3.timeParse("%d/%m/%Y");
-        // console.log(this.xScale(parseTime("30/4/2015")))
-        // console.log(this.xScale(new Date(2015,4,30)))
-        // console.log(this.width)
-        for (var i = iStart; i <= iEnd; i = i + drawEvery) {
-            this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
-        }
-        var iLast = Math.min(d.length - 1, iEnd + drawEvery);
-        this.canvas.lineTo(this.xScale(d[iLast][0]), this.yScale(d[iLast][1]));
-        this.canvas.lineWidth = this.plotLineWidth;
-        this.canvas.strokeStyle = this.dataColors[dataIndex];
-        this.canvas.stroke();
-        if (informationDensity >= this.showMarkerDensity) {
-            this.canvas.lineWidth = this.markerLineWidth;
-            for (var i = iStart; i <= iLast; ++i) {
-                this.canvas.beginPath();
-                this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]), this.markerRadius, 0, 2 * Math.PI);
-                this.canvas.stroke();
-            }
-        }
     }
 }
 //# sourceMappingURL=CanvasTimeSeriesPlot.js.map

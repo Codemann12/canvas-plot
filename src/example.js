@@ -80,76 +80,6 @@
     return [min, max];
   }
 
-  function max(values, valueof) {
-    var n = values.length,
-        i = -1,
-        value,
-        max;
-
-    if (valueof == null) {
-      while (++i < n) { // Find the first comparable value.
-        if ((value = values[i]) != null && value >= value) {
-          max = value;
-          while (++i < n) { // Compare the remaining values.
-            if ((value = values[i]) != null && value > max) {
-              max = value;
-            }
-          }
-        }
-      }
-    }
-
-    else {
-      while (++i < n) { // Find the first comparable value.
-        if ((value = valueof(values[i], i, values)) != null && value >= value) {
-          max = value;
-          while (++i < n) { // Compare the remaining values.
-            if ((value = valueof(values[i], i, values)) != null && value > max) {
-              max = value;
-            }
-          }
-        }
-      }
-    }
-
-    return max;
-  }
-
-  function min(values, valueof) {
-    var n = values.length,
-        i = -1,
-        value,
-        min;
-
-    if (valueof == null) {
-      while (++i < n) { // Find the first comparable value.
-        if ((value = values[i]) != null && value >= value) {
-          min = value;
-          while (++i < n) { // Compare the remaining values.
-            if ((value = values[i]) != null && min > value) {
-              min = value;
-            }
-          }
-        }
-      }
-    }
-
-    else {
-      while (++i < n) { // Find the first comparable value.
-        if ((value = valueof(values[i], i, values)) != null && value >= value) {
-          min = value;
-          while (++i < n) { // Compare the remaining values.
-            if ((value = valueof(values[i], i, values)) != null && min > value) {
-              min = value;
-            }
-          }
-        }
-      }
-    }
-
-    return min;
-  }
-
   var slice$1 = Array.prototype.slice;
 
   function identity$1(x) {
@@ -1270,32 +1200,6 @@
     return typeof selector === "string"
         ? new Selection([[document.querySelector(selector)]], [document.documentElement])
         : new Selection([[selector]], root);
-  }
-
-  function sourceEvent() {
-    var current = event, source;
-    while (source = current.sourceEvent) current = source;
-    return current;
-  }
-
-  function point(node, event) {
-    var svg = node.ownerSVGElement || node;
-
-    if (svg.createSVGPoint) {
-      var point = svg.createSVGPoint();
-      point.x = event.clientX, point.y = event.clientY;
-      point = point.matrixTransform(node.getScreenCTM().inverse());
-      return [point.x, point.y];
-    }
-
-    var rect = node.getBoundingClientRect();
-    return [event.clientX - rect.left - node.clientLeft, event.clientY - rect.top - node.clientTop];
-  }
-
-  function mouse(node) {
-    var event = sourceEvent();
-    if (event.changedTouches) event = event.changedTouches[0];
-    return point(node, event);
   }
 
   function define(constructor, factory, prototype) {
@@ -3120,7 +3024,134 @@
 
   var pi$1 = Math.PI;
 
-  var pi$2 = Math.PI;
+  var pi$2 = Math.PI,
+      tau$2 = 2 * pi$2,
+      epsilon$1 = 1e-6,
+      tauEpsilon = tau$2 - epsilon$1;
+
+  function Path() {
+    this._x0 = this._y0 = // start of current subpath
+    this._x1 = this._y1 = null; // end of current subpath
+    this._ = "";
+  }
+
+  function path() {
+    return new Path;
+  }
+
+  Path.prototype = path.prototype = {
+    constructor: Path,
+    moveTo: function(x, y) {
+      this._ += "M" + (this._x0 = this._x1 = +x) + "," + (this._y0 = this._y1 = +y);
+    },
+    closePath: function() {
+      if (this._x1 !== null) {
+        this._x1 = this._x0, this._y1 = this._y0;
+        this._ += "Z";
+      }
+    },
+    lineTo: function(x, y) {
+      this._ += "L" + (this._x1 = +x) + "," + (this._y1 = +y);
+    },
+    quadraticCurveTo: function(x1, y1, x, y) {
+      this._ += "Q" + (+x1) + "," + (+y1) + "," + (this._x1 = +x) + "," + (this._y1 = +y);
+    },
+    bezierCurveTo: function(x1, y1, x2, y2, x, y) {
+      this._ += "C" + (+x1) + "," + (+y1) + "," + (+x2) + "," + (+y2) + "," + (this._x1 = +x) + "," + (this._y1 = +y);
+    },
+    arcTo: function(x1, y1, x2, y2, r) {
+      x1 = +x1, y1 = +y1, x2 = +x2, y2 = +y2, r = +r;
+      var x0 = this._x1,
+          y0 = this._y1,
+          x21 = x2 - x1,
+          y21 = y2 - y1,
+          x01 = x0 - x1,
+          y01 = y0 - y1,
+          l01_2 = x01 * x01 + y01 * y01;
+
+      // Is the radius negative? Error.
+      if (r < 0) throw new Error("negative radius: " + r);
+
+      // Is this path empty? Move to (x1,y1).
+      if (this._x1 === null) {
+        this._ += "M" + (this._x1 = x1) + "," + (this._y1 = y1);
+      }
+
+      // Or, is (x1,y1) coincident with (x0,y0)? Do nothing.
+      else if (!(l01_2 > epsilon$1));
+
+      // Or, are (x0,y0), (x1,y1) and (x2,y2) collinear?
+      // Equivalently, is (x1,y1) coincident with (x2,y2)?
+      // Or, is the radius zero? Line to (x1,y1).
+      else if (!(Math.abs(y01 * x21 - y21 * x01) > epsilon$1) || !r) {
+        this._ += "L" + (this._x1 = x1) + "," + (this._y1 = y1);
+      }
+
+      // Otherwise, draw an arc!
+      else {
+        var x20 = x2 - x0,
+            y20 = y2 - y0,
+            l21_2 = x21 * x21 + y21 * y21,
+            l20_2 = x20 * x20 + y20 * y20,
+            l21 = Math.sqrt(l21_2),
+            l01 = Math.sqrt(l01_2),
+            l = r * Math.tan((pi$2 - Math.acos((l21_2 + l01_2 - l20_2) / (2 * l21 * l01))) / 2),
+            t01 = l / l01,
+            t21 = l / l21;
+
+        // If the start tangent is not coincident with (x0,y0), line to.
+        if (Math.abs(t01 - 1) > epsilon$1) {
+          this._ += "L" + (x1 + t01 * x01) + "," + (y1 + t01 * y01);
+        }
+
+        this._ += "A" + r + "," + r + ",0,0," + (+(y01 * x20 > x01 * y20)) + "," + (this._x1 = x1 + t21 * x21) + "," + (this._y1 = y1 + t21 * y21);
+      }
+    },
+    arc: function(x, y, r, a0, a1, ccw) {
+      x = +x, y = +y, r = +r;
+      var dx = r * Math.cos(a0),
+          dy = r * Math.sin(a0),
+          x0 = x + dx,
+          y0 = y + dy,
+          cw = 1 ^ ccw,
+          da = ccw ? a0 - a1 : a1 - a0;
+
+      // Is the radius negative? Error.
+      if (r < 0) throw new Error("negative radius: " + r);
+
+      // Is this path empty? Move to (x0,y0).
+      if (this._x1 === null) {
+        this._ += "M" + x0 + "," + y0;
+      }
+
+      // Or, is (x0,y0) not coincident with the previous point? Line to (x0,y0).
+      else if (Math.abs(this._x1 - x0) > epsilon$1 || Math.abs(this._y1 - y0) > epsilon$1) {
+        this._ += "L" + x0 + "," + y0;
+      }
+
+      // Is this arc empty? We’re done.
+      if (!r) return;
+
+      // Does the angle go the wrong way? Flip the direction.
+      if (da < 0) da = da % tau$2 + tau$2;
+
+      // Is this a complete circle? Draw two arcs to complete the circle.
+      if (da > tauEpsilon) {
+        this._ += "A" + r + "," + r + ",0,1," + cw + "," + (x - dx) + "," + (y - dy) + "A" + r + "," + r + ",0,1," + cw + "," + (this._x1 = x0) + "," + (this._y1 = y0);
+      }
+
+      // Is this arc non-empty? Draw an arc!
+      else if (da > epsilon$1) {
+        this._ += "A" + r + "," + r + ",0," + (+(da >= pi$2)) + "," + cw + "," + (this._x1 = x + r * Math.cos(a1)) + "," + (this._y1 = y + r * Math.sin(a1));
+      }
+    },
+    rect: function(x, y, w, h) {
+      this._ += "M" + (this._x0 = this._x1 = +x) + "," + (this._y0 = this._y1 = +y) + "h" + (+w) + "v" + (+h) + "h" + (-w) + "Z";
+    },
+    toString: function() {
+      return this._;
+    }
+  };
 
   var prefix = "$";
 
@@ -3196,12 +3227,12 @@
     return map;
   }
 
-  function Set$1() {}
+  function Set() {}
 
   var proto = map$2.prototype;
 
-  Set$1.prototype = set$2.prototype = {
-    constructor: Set$1,
+  Set.prototype = set$2.prototype = {
+    constructor: Set,
     has: proto.has,
     add: function(value) {
       value += "";
@@ -3217,10 +3248,10 @@
   };
 
   function set$2(object, f) {
-    var set = new Set$1;
+    var set = new Set;
 
     // Copy constructor.
-    if (object instanceof Set$1) object.each(function(value) { set.add(value); });
+    if (object instanceof Set) object.each(function(value) { set.add(value); });
 
     // Otherwise, assume it’s an array.
     else if (object) {
@@ -3307,7 +3338,7 @@
     return columns;
   }
 
-  function dsvFormat(delimiter) {
+  function dsv(delimiter) {
     var reFormat = new RegExp("[\"" + delimiter + "\n\r]"),
         DELIMITER = delimiter.charCodeAt(0);
 
@@ -3400,9 +3431,19 @@
     };
   }
 
-  var csv = dsvFormat(",");
+  var csv = dsv(",");
 
-  var tsv = dsvFormat("\t");
+  var csvParse = csv.parse;
+  var csvParseRows = csv.parseRows;
+  var csvFormat = csv.format;
+  var csvFormatRows = csv.formatRows;
+
+  var tsv = dsv("\t");
+
+  var tsvParse = tsv.parse;
+  var tsvParseRows = tsv.parseRows;
+  var tsvFormat = tsv.format;
+  var tsvFormatRows = tsv.formatRows;
 
   function tree_add(d) {
     var x = +this._x.call(null, d),
@@ -6046,7 +6087,104 @@
 
   var plasma = ramp$1(colors("0d088710078813078916078a19068c1b068d1d068e20068f2206902406912605912805922a05932c05942e05952f059631059733059735049837049938049a3a049a3c049b3e049c3f049c41049d43039e44039e46039f48039f4903a04b03a14c02a14e02a25002a25102a35302a35502a45601a45801a45901a55b01a55c01a65e01a66001a66100a76300a76400a76600a76700a86900a86a00a86c00a86e00a86f00a87100a87201a87401a87501a87701a87801a87a02a87b02a87d03a87e03a88004a88104a78305a78405a78606a68707a68808a68a09a58b0aa58d0ba58e0ca48f0da4910ea3920fa39410a29511a19613a19814a099159f9a169f9c179e9d189d9e199da01a9ca11b9ba21d9aa31e9aa51f99a62098a72197a82296aa2395ab2494ac2694ad2793ae2892b02991b12a90b22b8fb32c8eb42e8db52f8cb6308bb7318ab83289ba3388bb3488bc3587bd3786be3885bf3984c03a83c13b82c23c81c33d80c43e7fc5407ec6417dc7427cc8437bc9447aca457acb4679cc4778cc4977cd4a76ce4b75cf4c74d04d73d14e72d24f71d35171d45270d5536fd5546ed6556dd7566cd8576bd9586ada5a6ada5b69db5c68dc5d67dd5e66de5f65de6164df6263e06363e16462e26561e26660e3685fe4695ee56a5de56b5de66c5ce76e5be76f5ae87059e97158e97257ea7457eb7556eb7655ec7754ed7953ed7a52ee7b51ef7c51ef7e50f07f4ff0804ef1814df1834cf2844bf3854bf3874af48849f48948f58b47f58c46f68d45f68f44f79044f79143f79342f89441f89540f9973ff9983ef99a3efa9b3dfa9c3cfa9e3bfb9f3afba139fba238fca338fca537fca636fca835fca934fdab33fdac33fdae32fdaf31fdb130fdb22ffdb42ffdb52efeb72dfeb82cfeba2cfebb2bfebd2afebe2afec029fdc229fdc328fdc527fdc627fdc827fdca26fdcb26fccd25fcce25fcd025fcd225fbd324fbd524fbd724fad824fada24f9dc24f9dd25f8df25f8e125f7e225f7e425f6e626f6e826f5e926f5eb27f4ed27f3ee27f3f027f2f227f1f426f1f525f0f724f0f921"));
 
+  function constant$f(x) {
+    return function constant() {
+      return x;
+    };
+  }
+
   var pi$4 = Math.PI;
+
+  function Linear(context) {
+    this._context = context;
+  }
+
+  Linear.prototype = {
+    areaStart: function() {
+      this._line = 0;
+    },
+    areaEnd: function() {
+      this._line = NaN;
+    },
+    lineStart: function() {
+      this._point = 0;
+    },
+    lineEnd: function() {
+      if (this._line || (this._line !== 0 && this._point === 1)) this._context.closePath();
+      this._line = 1 - this._line;
+    },
+    point: function(x, y) {
+      x = +x, y = +y;
+      switch (this._point) {
+        case 0: this._point = 1; this._line ? this._context.lineTo(x, y) : this._context.moveTo(x, y); break;
+        case 1: this._point = 2; // proceed
+        default: this._context.lineTo(x, y); break;
+      }
+    }
+  };
+
+  function curveLinear(context) {
+    return new Linear(context);
+  }
+
+  function x$3(p) {
+    return p[0];
+  }
+
+  function y$3(p) {
+    return p[1];
+  }
+
+  function line() {
+    var x$$1 = x$3,
+        y$$1 = y$3,
+        defined = constant$f(true),
+        context = null,
+        curve = curveLinear,
+        output = null;
+
+    function line(data) {
+      var i,
+          n = data.length,
+          d,
+          defined0 = false,
+          buffer;
+
+      if (context == null) output = curve(buffer = path());
+
+      for (i = 0; i <= n; ++i) {
+        if (!(i < n && defined(d = data[i], i, data)) === defined0) {
+          if (defined0 = !defined0) output.lineStart();
+          else output.lineEnd();
+        }
+        if (defined0) output.point(+x$$1(d, i, data), +y$$1(d, i, data));
+      }
+
+      if (buffer) return output = null, buffer + "" || null;
+    }
+
+    line.x = function(_) {
+      return arguments.length ? (x$$1 = typeof _ === "function" ? _ : constant$f(+_), line) : x$$1;
+    };
+
+    line.y = function(_) {
+      return arguments.length ? (y$$1 = typeof _ === "function" ? _ : constant$f(+_), line) : y$$1;
+    };
+
+    line.defined = function(_) {
+      return arguments.length ? (defined = typeof _ === "function" ? _ : constant$f(!!_), line) : defined;
+    };
+
+    line.curve = function(_) {
+      return arguments.length ? (curve = _, context != null && (output = curve(context)), line) : curve;
+    };
+
+    line.context = function(_) {
+      return arguments.length ? (_ == null ? context = output = null : output = curve(context = _), line) : context;
+    };
+
+    return line;
+  }
 
   function sign$1(x) {
     return x < 0 ? -1 : 1;
@@ -6145,6 +6283,10 @@
     bezierCurveTo: function(x1, y1, x2, y2, x, y) { this._context.bezierCurveTo(y1, x1, y2, x2, y, x); }
   };
 
+  function monotoneX(context) {
+    return new MonotoneX(context);
+  }
+
   class CanvasTimeSeriesPlot {
       constructor(parentElement, canvasDimensions, config = {}) {
           this.config = config || {};
@@ -6186,8 +6328,6 @@
           this.totalHeight = Math.max(this.minCanvasHeight, canvasDimensions[1]);
           this.width = this.totalWidth - this.margin.left - this.margin.right;
           this.height = this.totalHeight - this.margin.top - this.margin.bottom;
-          // this.zoomListener = d3.zoom().on("zoom", this.zoomFunction);
-          //Append to the selected HTMLElement a div with the listed properties
           this.div = this.parent.append("div")
               .attr("class", "cvpChart")
               .style("width", this.totalWidth + "px")
@@ -6241,9 +6381,15 @@
           }
           this.xAxisZoom = true;
           this.yAxisZoom = true;
-          // this.drawCanvas();
-          // this.resetZoomListenerAxes();   
+          // this.zoom = d3.zoom()
+          // .on("zoom", this.zoomFunction());
       }
+      // zoomFunction(): ValueFn<Element, {}, void>{
+      // 	var new_xScale = d3.event.transform.rescaleX(this.xScale)
+      // 	var new_yScale = d3.event.transform.rescaleY(this.yScale)
+      // 	console.log(d3.event.transform)
+      // 	return new_xScale;
+      // }
       addDataSet(uniqueID, label, dataSet, colorString, updateDomains, copyData) {
           this.informationDensity.push(1);
           this.dataIDs.push(uniqueID);
@@ -6251,18 +6397,23 @@
           this.dataColors.push(colorString);
           this.displayIndexStart.push(0);
           this.displayIndexEnd.push(0);
-          //  dataSet = dataSet || []; 
+          dataSet = dataSet || [];
+          this.data = [];
           if (copyData) {
               var dataIndex = this.data.length;
-              this.data.push(dataSet);
+              dataSet.forEach(elem => {
+                  this.data.push(elem);
+              });
               var dataSetLength = dataSet.length;
               for (var i = 0; i < dataSetLength; ++i) {
                   var sliceData = jQuery.extend(true, {}, dataSet[i]); //deep copy --> arr.slice(0)
-                  this.data[dataIndex].push(sliceData);
+                  this.data[dataIndex] = sliceData;
               }
           }
           else {
-              this.data.push(dataSet);
+              dataSet.forEach(elem => {
+                  this.data.push(elem);
+              });
           }
           this.updateLegend();
           if (updateDomains) {
@@ -6307,8 +6458,8 @@
                   .attr("transform", "translate(" + (this.width - this.legendWidth - this.legendMargin) + ", " + this.legendMargin + ")");
           }
           this.updateDisplayIndices();
-          // this.resetZoomListenerAxes();
           this.drawCanvas();
+          console.log("resize");
       }
       updateDomains(xDomain, yDomain, makeItNice) {
           this.xScale = time().domain(xDomain);
@@ -6318,16 +6469,64 @@
               this.yScale = linear$2().nice();
           }
           this.updateDisplayIndices();
-          // this.resetZoomListenerAxes();
           this.drawCanvas();
       }
       drawCanvas() {
           this.canvas.clearRect(0, 0, this.width, this.height);
           this.drawGrid();
           var nDataSets = this.data.length;
-          for (var i = 0; i < nDataSets; ++i) {
-              this.drawDataSet(i);
-          }
+          // for(var i=0; i<nDataSets; ++i) {
+          // 	this.drawDataSet(i);
+          // 	}
+          this.drawDataSet();
+      }
+      drawDataSet() {
+          var line$$1 = line()
+              .x(d => { return this.xScale(d.xDate); })
+              .y(d => { return this.yScale(d.yNum); })
+              .curve(monotoneX);
+          var color$$1 = this.dataColors.length > 1 ? this.dataColors[1] : this.dataColors[0];
+          var div = select("body").append("div")
+              .attr("class", "tooltip")
+              .style("opacity", 0);
+          this.svgTranslateGroup.append("path")
+              .datum(this.data)
+              .attr("class", "line")
+              .attr("d", line$$1)
+              .style("fill", "none")
+              .style("stroke", color$$1)
+              .style("stroke-width", 2);
+          var formatTime = timeFormat("%d-%b-%y");
+          this.svgTranslateGroup.selectAll("circle")
+              .data(this.data)
+              .enter().append("circle")
+              .attr("class", "circle")
+              .attr("cx", d => { return this.xScale(d["xDate"]); })
+              .attr("cy", d => { return this.yScale(d["yNum"]); })
+              .attr("r", 4)
+              .style("fill", color$$1);
+          this.svgTranslateGroup.selectAll(".dot")
+              .data(this.data)
+              .enter().append("circle")
+              .attr("class", "circle")
+              .attr("cx", d => { return this.xScale(d["xDate"]); })
+              .attr("cy", d => { return this.yScale(d["yNum"]); })
+              .attr("r", 4)
+              .style("fill", color$$1)
+              .on("mouseover", d => {
+              div.transition()
+                  .duration(200)
+                  .style("opacity", .9)
+                  .style("background-color", color$$1);
+              div.html("xCoord: " + formatTime(d["xDate"]) + "<br/>" + "yCoord: " + d["yNum"])
+                  .style("left", (event.pageX) + "px")
+                  .style("top", (event.pageY - 28) + "px");
+          })
+              .on("mouseout", () => {
+              div.transition()
+                  .duration(500)
+                  .style("opacity", 0);
+          });
       }
       updateLegend() {
           if (this.disableLegend) {
@@ -6370,24 +6569,17 @@
           this.legend
               .attr("transform", "translate(" + (this.width - this.legendWidth - this.legendMargin) + ", " + this.legendMargin + ")");
       }
-      // findLargestSmaller(d: Array<[Date, number]>, ia: number, ib: number, v:  number): number {
-      // 	if(this.xScale(d[ia][0]) >= v || ib-ia <= 1) {
-      // 		return ia;
-      // 	}
-      // 	var imiddle = Math.floor(0.5*(ia+ib));
-      // 	return this.xScale(d[imiddle][0]) <= v ? this.findLargestSmaller(d, imiddle, ib, v) : this.findLargestSmaller(d, ia, imiddle, v);
-      // }
       drawGrid() {
           this.canvas.lineWidth = 0.9;
           this.canvas.strokeStyle = this.gridColor;
           this.canvas.beginPath();
           for (var i = 1; i <= Math.floor(this.width); i++) {
-              var x = (i * 50);
+              var x = (i * 10);
               this.canvas.moveTo(0, x);
               this.canvas.lineTo(this.width, x);
           }
           for (var j = 1; j <= Math.floor(this.height); j++) {
-              var y = (j * 100);
+              var y = (j * 10);
               this.canvas.moveTo(y, 0);
               this.canvas.lineTo(y, this.height);
           }
@@ -6402,63 +6594,32 @@
           this.removeDataSet.call(this, uniqueID);
       }
       calculateXDomain() {
-          var dates = [];
-          let nonEmptySets = [];
-          this.data.forEach(ds => {
-              if (ds && ds.length > 0) {
-                  nonEmptySets.push(ds);
-              }
-          });
-          nonEmptySets.forEach(dataPoint => {
-              dataPoint.forEach(point$$1 => {
-                  dates.push(point$$1[0]);
-              });
-          });
-          if (dates.length === 0) {
-              for (var i = 1; i < 100; i++) {
-                  dates.push(this.addDays(new Date(2015, 2, 23), i));
+          if (this.data.length <= 1) {
+              for (var i = 0; i < 365; ++i) {
+                  this.data.push({ xDate: this.addDays(new Date(2017, 0, 1), i), yNum: Math.random() });
               }
           }
-          return extent([...new Set(dates)], function (d) { return d; });
+          return extent(this.data, function (d) { return d.xDate; });
       }
       calculateYDomain() {
-          let nonEmptySets = [];
-          this.data.forEach(ds => {
-              if (ds && ds.length > 0) {
-                  nonEmptySets.push(ds);
-              }
-          });
-          if (nonEmptySets.length < 1) {
-              return [0, 1];
-          }
-          var min$$1 = min(nonEmptySets[0], function (d) { return d[1]; });
-          var max$$1 = max(nonEmptySets[0], function (d) { return d[1]; });
-          for (var i = 1; i < nonEmptySets.length; ++i) {
-              min$$1 = Math.min(min$$1, min(nonEmptySets[i], function (d) { return d[1]; }));
-              max$$1 = Math.max(max$$1, max(nonEmptySets[i], function (d) { return d[1]; }));
-          }
-          if (max$$1 - min$$1 <= 0) {
-              min$$1 = max$$1 - 1;
-              max$$1 += 1;
-          }
-          return [min$$1, max$$1];
+          return extent(this.data, function (d) { return d.yNum; });
       }
       destroy() {
           this.div.remove();
       }
       updateDisplayIndices() {
-          var nDataSets = this.data.length;
-          for (var i = 0; i < nDataSets; ++i) {
-              var d = this.data[i];
-              if (d.length < 1) {
-                  continue;
-              }
-              var iStart = this.displayIndexStart[i];
-              var iEnd = this.displayIndexEnd[i];
-              var iLength = iEnd - iStart + 1;
-              var scaleLength = Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
-              this.informationDensity[i] = iLength / scaleLength;
-          }
+          // var nDataSets = this.data.length;
+          // for(var i=0; i<nDataSets; ++i) {
+          //     var d = this.data[i];
+          //     if(d.length < 1) {
+          //         continue;
+          //     }
+          //     var iStart = this.displayIndexStart[i];
+          //     var iEnd = this.displayIndexEnd[i];
+          //     var iLength = iEnd - iStart + 1;
+          //     var scaleLength =  Math.max(1, this.xScale(d[iEnd][0]) - this.xScale(d[iStart][0]));
+          //     this.informationDensity[i] = iLength/scaleLength;
+          // }
       }
       removeTooltip() {
           if (!this.tooltip) {
@@ -6468,36 +6629,38 @@
           this.tooltip = null;
       }
       updateTooltip() {
-          var mouse$$1 = mouse(this.div.node());
-          var mx = mouse$$1[0] - this.margin.left;
-          var my = mouse$$1[1] - this.margin.top;
-          if (mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
-              this.removeTooltip();
-              return;
-          }
-          var nDataSets = this.data.length;
-          var hitMarker = false;
-          TimeSeriesPlot_updateTooltip_graph_loop: for (var i = 0; i < nDataSets; ++i) {
-              if (this.informationDensity[i] > this.showMarkerDensity) {
-                  continue;
-              }
-              var d = this.data[i];
-              var iStart = this.displayIndexStart[i];
-              var iEnd = Math.min(d.length - 1, this.displayIndexEnd[i] + 1);
-              for (var j = iStart; j <= iEnd; ++j) {
-                  var dx = this.xScale(d[j][0]) - mx;
-                  var dy = this.yScale(d[j][1]) - my;
-                  if (dx * dx + dy * dy <= this.tooltipRadiusSquared) {
-                      hitMarker = true;
-                      this.showTooltip([this.xScale(d[j][0]),
-                          this.yScale(d[j][1])], this.dataColors[i], this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
-                      break TimeSeriesPlot_updateTooltip_graph_loop;
-                  }
-              }
-          }
-          if (!hitMarker) {
-              this.removeTooltip();
-          }
+          // var mouse = d3.mouse(this.div.node());
+          // var mx = mouse[0] - this.margin.left;
+          // var my = mouse[1] - this.margin.top;
+          // if(mx <= 0 || mx >= this.width || my <= 0 || my >= this.height) {
+          //     this.removeTooltip();
+          //     return;
+          // }
+          // var nDataSets = this.data.length;
+          // var hitMarker = false;
+          // TimeSeriesPlot_updateTooltip_graph_loop:
+          // for(var i=0; i<nDataSets; ++i) {
+          //     if(this.informationDensity[i] > this.showMarkerDensity) {
+          //         continue;
+          //     }
+          //     var d = this.data[i];
+          //     var iStart = this.displayIndexStart[i];
+          //     var iEnd = Math.min(d.length-1, this.displayIndexEnd[i]+1);
+          //     for(var j=iStart; j<=iEnd; ++j) {
+          //         var dx = this.xScale(d[j][0]) - mx;
+          //         var dy = this.yScale(d[j][1]) - my;
+          //         if(dx*dx + dy*dy <= this.tooltipRadiusSquared) {
+          //             hitMarker = true;
+          //             this.showTooltip([this.xScale(d[j][0]), 
+          //             this.yScale(d[j][1])], this.dataColors[i],
+          //             this.getTooltipStringX(d[j]), this.getTooltipStringY(d[j]));
+          //             break TimeSeriesPlot_updateTooltip_graph_loop;
+          //         }
+          //     }
+          // }
+          // if(!hitMarker){
+          //     this.removeTooltip();
+          // }
       }
       showTooltip(position, color$$1, xText, yText) {
           if (this.tooltip) {
@@ -6549,6 +6712,9 @@
       randomDate(start, end) {
           return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
       }
+      getRandomInt(max$$1) {
+          return Math.floor(Math.random() * Math.floor(max$$1));
+      }
       setupXScaleAndAxis() {
           this.xScale = time()
               .domain(this.calculateXDomain())
@@ -6556,10 +6722,11 @@
               .nice()
               .clamp(true);
           var formatMilliSecond = timeFormat(".%L"), formatSecond = timeFormat(":%S"), formatHour = timeFormat("%I:%p"), formatWeek = timeFormat("%b %d"), formatMonth = timeFormat("%B"), formatYear = timeFormat("%Y");
+          var xFormat = "%d-%b-%y";
           this.xAxis = axisBottom(this.xScale)
               // .tickFormat(multiFormat)
-              // .tickFormat(d3.timeFormat(xFormat))
-              .ticks(day.every(4));
+              .tickFormat(timeFormat(xFormat));
+          // .ticks(d3.timeDay.every(4))
       }
       setupYScaleAndAxis() {
           this.yScale = linear$2()
@@ -6569,43 +6736,6 @@
               .clamp(true);
           this.yAxis = axisLeft(this.yScale)
               .ticks(Math.round(this.yTicksPerPixel * this.height));
-      }
-      drawDataSet(dataIndex) {
-          var d = this.data[dataIndex];
-          if (d.length < 1) {
-              return;
-          }
-          // console.log(this.data)
-          var iStart = this.displayIndexStart[dataIndex];
-          var iEnd = this.displayIndexEnd[dataIndex];
-          var informationDensity = this.informationDensity[dataIndex];
-          var drawEvery = 1;
-          if (informationDensity > this.maxInformationDensity) {
-              drawEvery = Math.floor(informationDensity / this.maxInformationDensity);
-          }
-          iStart = Math.max(0, iStart - iStart % drawEvery);
-          this.canvas.beginPath();
-          this.canvas.moveTo(this.xScale(d[iStart][0]) / 10, this.yScale(d[iStart][1]));
-          // var parseTime = d3.timeParse("%d/%m/%Y");
-          // console.log(this.xScale(parseTime("30/4/2015")))
-          // console.log(this.xScale(new Date(2015,4,30)))
-          // console.log(this.width)
-          for (var i = iStart; i <= iEnd; i = i + drawEvery) {
-              this.canvas.lineTo(this.xScale(d[i][0]), this.yScale(d[i][1]));
-          }
-          var iLast = Math.min(d.length - 1, iEnd + drawEvery);
-          this.canvas.lineTo(this.xScale(d[iLast][0]), this.yScale(d[iLast][1]));
-          this.canvas.lineWidth = this.plotLineWidth;
-          this.canvas.strokeStyle = this.dataColors[dataIndex];
-          this.canvas.stroke();
-          if (informationDensity >= this.showMarkerDensity) {
-              this.canvas.lineWidth = this.markerLineWidth;
-              for (var i = iStart; i <= iLast; ++i) {
-                  this.canvas.beginPath();
-                  this.canvas.arc(this.xScale(d[i][0]), this.yScale(d[i][1]), this.markerRadius, 0, 2 * Math.PI);
-                  this.canvas.stroke();
-              }
-          }
       }
   }
 
@@ -6619,17 +6749,17 @@
   $(document).ready(function () {
       var ts1 = [];
       var ts2 = [];
-      for (var i = 0; i < 100; ++i) {
-          ts1.push([addDays(new Date(2010, 1, 1), i), Math.random()]);
-          ts2.push([addDays(new Date(2015, 12, 11), i), Math.random()]);
+      for (var i = 0; i < 365; ++i) {
+          ts1.push({ xDate: addDays(new Date(2017, 0, 1), i * 5), yNum: Math.random() });
+          ts2.push({ xDate: addDays(new Date(2017, 0, 1), i * 9), yNum: Math.random() });
       }
       var plot2 = new CanvasTimeSeriesPlot(select("#maincontainer"), getDemoPlotSize(), {
           yAxisLabel: "Voltage [V]"
       });
-      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", true, false);
-      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", true, false);
-      $(window).resize(function () {
-          plot2.resize(getDemoPlotSize());
+      plot2.addDataSet("ds1", "Signal 1", ts1, "orange", false, false);
+      plot2.addDataSet("ds2", "Signal 2", ts2, "steelblue", false, false);
+      $(window).resize(() => {
+          // plot2.resize(getDemoPlotSize());
       });
   });
 

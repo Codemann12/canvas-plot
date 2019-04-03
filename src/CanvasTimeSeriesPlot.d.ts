@@ -1,10 +1,14 @@
 import * as d3 from 'd3';
 import * as d3Axis from 'd3-axis';
+import * as d3Zoom from 'd3-zoom';
 export declare class CanvasTimeSeriesPlot {
     parent: d3.Selection<any, {}, HTMLElement, {}>;
     canvasDimensions: Array<number>;
     config: CanvasTimeSeriesPlot.Config;
-    data: Array<Array<[any, number]>>;
+    data: Array<{
+        xDate: Date;
+        yNum: number;
+    }>;
     dataIDs: Array<string>;
     dataLabels: Array<string>;
     displayIndexStart: Array<number>;
@@ -13,6 +17,7 @@ export declare class CanvasTimeSeriesPlot {
     xAxisLabelText: string;
     yAxisLabelText: string;
     updateViewCallback: undefined;
+    zoom: d3Zoom.ZoomBehavior<Element, any>;
     disableLegend: boolean;
     invertYAxis: boolean;
     gridColor: string;
@@ -59,15 +64,19 @@ export declare class CanvasTimeSeriesPlot {
     maxInformationDensity: number;
     showMarkerDensity: number;
     constructor(parentElement: d3.Selection<any, {}, HTMLElement, {}>, canvasDimensions: Array<number>, config?: CanvasTimeSeriesPlot.Config);
-    addDataSet(uniqueID: string, label: string, dataSet: Array<[Date, number]>, colorString: string, updateDomains: boolean, copyData?: boolean): void;
+    addDataSet(uniqueID: string, label: string, dataSet: Array<{
+        xDate: Date;
+        yNum: number;
+    }>, colorString: string, updateDomains: boolean, copyData?: boolean): void;
     resize(dimensions: Array<number>): void;
     updateDomains(xDomain: Array<Date>, yDomain: Array<number>, makeItNice: boolean): void;
     drawCanvas(): void;
+    drawDataSet(): void;
     updateLegend(): void;
     drawGrid(): void;
     removeDataSet(uniqueID: string): void;
     calculateXDomain(): Array<Date>;
-    calculateYDomain(): Array<any>;
+    calculateYDomain(): Array<number>;
     destroy(): void;
     updateDisplayIndices(): void;
     removeTooltip(): void;
@@ -77,9 +86,9 @@ export declare class CanvasTimeSeriesPlot {
     getTooltipStringY(dataPoint: [Date, number]): string;
     addDays(date: Date, days: number): Date;
     randomDate(start: Date, end: Date): Date;
+    getRandomInt(max: number): number;
     setupXScaleAndAxis(): void;
     setupYScaleAndAxis(): void;
-    drawDataSet(dataIndex: number): void;
 }
 export declare namespace CanvasTimeSeriesPlot {
     interface Config {
@@ -117,3 +126,7 @@ export declare namespace CanvasTimeSeriesPlot {
         left?: number;
     }
 }
+export declare type LineType = {
+    xDate: Date;
+    yNum: number;
+};
